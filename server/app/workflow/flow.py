@@ -1,8 +1,8 @@
 from pydoc import describe
 from prefect import flow
 from app.analysis import *
+from app.types import AlgorithmType
 from .preprocessing import *
-from .algo_type import AlgorithmType
 
 @flow(name="GPB", description="Gaussian Process Bandits")
 def gaussian_process_bandits(result_id):

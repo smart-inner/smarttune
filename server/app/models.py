@@ -1,7 +1,5 @@
-from email.policy import default
-from pydoc import describe
-from unicodedata import category
 from . import db
+from app.types import AlgorithmType
 from datetime import datetime
 
 
@@ -49,7 +47,7 @@ class Session(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
     description = db.Column(db.String(128), nullable=True)
-    algorithm = db.Column(db.String(64), nullable=False, default='GPB')
+    algorithm = db.Column(db.String(64), nullable=False, default=AlgorithmType.GPB.name)
     creation_time = db.Column(db.DateTime, default=datetime.now)
     target_objective = db.Column(db.String(64), nullable=False)
     hyper_parameters = db.Column(db.Text, nullable=True)
