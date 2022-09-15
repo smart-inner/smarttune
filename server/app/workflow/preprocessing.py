@@ -1,15 +1,8 @@
-import requests
-from prefect import task
+from prefect import task, get_run_logger
 from app.analysis import *
 
-@task
-def call_api(url):
-    response = requests.get(url)
-    print(response.status_code)
-    return response.json()
-
-@task
-def parse_fact(response):
-   fact = response["fact"]
-   print(fact)
-   return fact
+@task(name="preprocessing")
+def preprocessing(result_id, algorithm):
+    logger = get_run_logger()
+    logger.error("hello world")
+    return algorithm

@@ -11,4 +11,4 @@ def generate_result(session_name):
 
 @result.route('/query/<session_name>', methods=['GET'])
 def query_result(session_name):
-    return flow.api_flow("https://catfact.ninja/fact")
+    return flow.gaussian_process_bandits("123")

@@ -1,9 +1,10 @@
+from pydoc import describe
 from prefect import flow
 from app.analysis import *
 from .preprocessing import *
+from .algo_type import AlgorithmType
 
-@flow
-def api_flow(url):
-    fact_json = call_api(url)
-    fact_text = parse_fact(fact_json)
-    return fact_text
+@flow(name="GPB", description="Gaussian Process Bandits")
+def gaussian_process_bandits(result_id):
+    preprocess_data = preprocessing(result_id, AlgorithmType.GPB)
+    return "hello world"

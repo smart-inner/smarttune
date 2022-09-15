@@ -1,11 +1,11 @@
 from flask import Blueprint
-
-from .. import db
-from .. import models
+from app.workflow import flow
+from app.models import *
+from app import db
 
 session = Blueprint('session', __name__)
 
-@session.route('/create', methods=['POST'])
+@session.route('/', methods=['POST'])
 def create_session():
    user_list = db.session.query(models.User).all()
    db.session.close()
@@ -13,4 +13,7 @@ def create_session():
        print(item.username)
    return "success"
 
+@session.route('/<session_name>', methods=['DELETE'])
+def delete_session(session_name):
+    return "success"
 
