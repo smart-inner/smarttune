@@ -19,7 +19,7 @@ class SystemCatalog(db.Model):
 class KnobCatalog(db.Model):
     __tablename__ = "knob_catalog"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(64), unique=True, nullable=False)
+    name = db.Column(db.String(64), nullable=False)
     system_id = db.Column(db.Integer, db.ForeignKey("system_catalog.id"))
     var_type = db.Column(db.String(32), nullable=False)
     unit = db.Column(db.String(32), nullable=False)
@@ -38,6 +38,7 @@ class MetricCatalog(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
     var_type = db.Column(db.String(32), nullable=False)
+    unit = db.Column(db.String(32), nullable=False)
     description = db.Column(db.Text, nullable=True)
     scope = db.Column(db.String(32))
     system_id = db.Column(db.Integer, db.ForeignKey("system_catalog.id"))
