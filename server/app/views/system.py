@@ -22,4 +22,4 @@ def register_system():
         db.session.commit()
         return Response('Success to register %s:%s' % (system_type, version), status=200)
     else:
-        return Response('%s:%s has been registered' % (system_type, version), status=200)
+        return Response('%s:%s has been registered' % (system_type, version), status=500)

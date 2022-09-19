@@ -42,4 +42,22 @@ def register_knobs_catalog():
 
 @knob.route('/tuning', methods=['POST'])
 def register_knobs_tuning():
-    return "success02"
+    req = json.loads(request.stream.read())
+    session_name = req.get('session_name', None)
+    tuning_knobs = req.get('tuning_knobs', [])
+    if session_name is None:
+        return Response("Request 'session_name' is null", status=500)
+    if len(tuning_knobs) == 0:
+        return Response("Request 'tuning_knobs' is empty", status=500)
+
+    got = Session.query.filter(Session.name == session_name).first()
+    session_id = got.id
+    system_id = got.system_id
+    knobs_catalog = KnobCatalog.query.filter(KnobCatalog.system_id == system_id).all()
+    knobs_tuning_list = []
+    for knob in knobs_catalog:
+        if knob.name in tuning_knobs:
+            knobs_tuning_list.append(SessionKnob(session_id=session_id, knob_id=knob.id))
+    db.session.add_all(knobs_tuning_list)
+    db.session.commit()
+    return Response("Success to register tuning knobs for session '%s'" % session_name, status=200)
