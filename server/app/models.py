@@ -77,6 +77,6 @@ class Result(db.Model):
     metric_data = db.Column(db.Text, nullable=True)
     observation_start_time = db.Column(db.DateTime)
     observation_end_time = db.Column(db.DateTime)
-    next_configuration = db.Column(db.Text, nullable=False)
+    next_configuration = db.Column(db.Text, nullable=True)
     session_id = db.Column(db.Integer, db.ForeignKey("session.id"))
-    workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"))
+    #workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"))

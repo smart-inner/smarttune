@@ -1,8 +1,10 @@
-from prefect import task, get_run_logger
 from app.analysis import *
+import time
 
-@task(name="preprocessing")
 def preprocessing(result_id, algorithm):
-    logger = get_run_logger()
-    logger.error("hello world")
-    return algorithm
+    #logger = get_run_logger()
+    #logger.error(result_id)
+    print("++++++++++")
+    time.sleep(10)
+    print("+++++++++++++++++++++++++")
+    return result_id
