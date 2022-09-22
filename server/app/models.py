@@ -41,6 +41,7 @@ class MetricCatalog(db.Model):
     unit = db.Column(db.String(32), nullable=False)
     description = db.Column(db.Text, nullable=True)
     scope = db.Column(db.String(32))
+    metric_type = db.Column(db.String(32), nullable=False)
     system_id = db.Column(db.Integer, db.ForeignKey("system_catalog.id"))
 
 class Session(db.Model):
@@ -77,6 +78,7 @@ class Result(db.Model):
     metric_data = db.Column(db.Text, nullable=True)
     observation_start_time = db.Column(db.DateTime)
     observation_end_time = db.Column(db.DateTime)
+    observation_time = db.Column(db.Float)
     next_configuration = db.Column(db.Text, nullable=True)
     session_id = db.Column(db.Integer, db.ForeignKey("session.id"))
     #workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"))

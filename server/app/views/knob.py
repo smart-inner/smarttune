@@ -24,7 +24,7 @@ def register_knobs_catalog():
     for knob in knobs:
         knobs_catalog_list.append(KnobCatalog(
             system_id=got.id, 
-            name=knob['name'], 
+            name=knob['scope'] + '.' + knob['name'], 
             var_type=knob['var_type'],
             unit=knob['unit'],
             category=knob['category'],
@@ -44,19 +44,30 @@ def register_knobs_catalog():
 def register_knobs_tuning():
     req = json.loads(request.stream.read())
     session_name = req.get('session_name', None)
-    tuning_knobs = req.get('tuning_knobs', [])
+    tuning_knobs = req.get('tuning_knobs', None)
     if session_name is None:
         return Response("Request 'session_name' is null", status=500)
-    if len(tuning_knobs) == 0:
+    if tuning_knobs is None:
         return Response("Request 'tuning_knobs' is empty", status=500)
+    global_knobs = tuning_knobs.get('global', None)
+    local_knobs = tuning_knobs.get('local', None)
+    if global_knobs is None and local_knobs is None:
+        return Response("Request 'global' and 'local' knobs is empty", status=500)
+    input_knobs = []
+    if global_knobs is not None:
+        input_knobs += ['global.' + value for value in global_knobs]
+    if local_knobs is not None:
+        input_knobs += ['local.' + value for value in local_knobs]
 
     got = Session.query.filter(Session.name == session_name).first()
+    if got is None:
+        return Response("Session '%s' has been not created" % session_name, status=500)
     session_id = got.id
     system_id = got.system_id
     knobs_catalog = KnobCatalog.query.filter(KnobCatalog.system_id == system_id).all()
     knobs_tuning_list = []
     for knob in knobs_catalog:
-        if knob.name in tuning_knobs:
+        if knob.name in input_knobs:
             knobs_tuning_list.append(SessionKnob(session_id=session_id, knob_id=knob.id))
     db.session.add_all(knobs_tuning_list)
     db.session.commit()

@@ -19,8 +19,6 @@ class UnitType(Enum):
     BYTES = "bytes"
     MILLISECONDS = "milliseconds"
     OTHER = "other"
-    MICROSECONDS = "microseconds"
-    SECONDS = "seconds"
 
 class ResourceType(Enum):
     MEMORY = "Memory"
@@ -32,3 +30,8 @@ class AlgorithmType(Enum):
     GPB = "Gaussian Process Bandits"
     DDPG = "Deep Deterministic Policy Gradients"
     DNN = "Deep Neural Network"
+
+class MetricType(Enum):
+    COUNTER = "COUNTER"
+    INFO = "INFO"
+    STATISTICS = "STATISTICS"

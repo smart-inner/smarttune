@@ -24,10 +24,11 @@ def register_metrics_catalog():
     for metric in metrics:
         metrics_catalog_list.append(MetricCatalog(
             system_id=got.id, 
-            name=metric['name'], 
+            name=metric['scope'] + '.' + metric['name'], 
             var_type=metric['var_type'],
             unit=metric['unit'],
             description=metric['description'],
+            metric_type=metric['metric_type'],
             scope=metric['scope']))
     db.session.add_all(metrics_catalog_list)
     db.session.commit()
