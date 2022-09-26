@@ -81,4 +81,37 @@ class Result(db.Model):
     observation_time = db.Column(db.Float)
     next_configuration = db.Column(db.Text, nullable=True)
     session_id = db.Column(db.Integer, db.ForeignKey("session.id"))
+    workload_id = db.Column(db.Integer, db.ForeignKey("workload.id"))
     #workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"))
+
+class Workload(db.Model):
+    __tablename__ = "workload"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(128), nullable=False)
+    status = db.Column(db.String(32), nullable=False)
+    system_id = db.Column(db.Integer, db.ForeignKey("system_catalog.id"))
+
+class PipelineRun(db.Model):
+    __tablename__ = "pipeline_run"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    start_time = db.Column(db.DateTime)
+    end_time = db.Column(db.DateTime)
+
+class PipelineData(db.Model):
+    __tablename__ = "pipeline_data"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    task_type = db.Column(db.String(32), nullable=False)
+    data = db.Column(db.Text, nullable=True)
+    creation_time = db.Column(db.DateTime, default=datetime.now)
+    workload_id = db.Column(db.Integer, db.ForeignKey("workload.id"))
+    pipeline_run_id = db.Column(db.Integer, db.ForeignKey("pipeline_run.id"))
+
+class ExecutionTime(db.Model):
+    __tablename__ = "execution_time"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    module = db.Column(db.String(32))
+    function = db.Column(db.String(64))
+    tag = db.Column(db.String(64), default='')
+    start_time = db.Column(db.DateTime)
+    execution_time = db.Column(db.Float)
+    result_id = db.Column(db.Integer, db.ForeignKey("result.id"))

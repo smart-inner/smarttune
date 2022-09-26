@@ -1,10 +1,32 @@
 from app.analysis import *
+from app.models import *
+from app import db
+from .utils import *
+from loguru import logger
 import time
 
+NUM_LHS_SAMPLES = 10
+
 def preprocessing(result_id, algorithm):
-    #logger = get_run_logger()
-    #logger.error(result_id)
-    print("++++++++++")
-    time.sleep(10)
-    print("+++++++++++++++++++++++++")
-    return result_id
+    start_ts = time.time()
+    target_data = {}
+    target_data['newest_result_id'] = result_id
+    newest_result = Result.query.filter(Result.id == result_id).first()
+    session = Session.query.filter(Session.id == newest_result.session_id).first()
+    knobs = get_knobs_for_session(session)
+    task_name = get_task_name(session, result_id)
+
+    has_pipeline_data = PipelineData.query.filter(db.exists().where(PipelineData.workload_id == newest_result.workload_id))
+    session_results = Result.query.filter(Result.session_id == session.id)
+    results_cnt = len(session_results)
+
+    if not has_pipeline_data or results_cnt == 0:
+        all_samples = gen_lhs_samples(knobs, NUM_LHS_SAMPLES)
+        samples = all_samples.pop()
+        target_data['status'] = 'lhs'
+        target_data['config_recommend'] = samples
+
+    exec_time = save_execution_time(start_ts, "preprocessing", result_id)
+    logger.info("%s: Done preprocessing data (%.1f seconds)." % (task_name, exec_time))
+
+    return target_data

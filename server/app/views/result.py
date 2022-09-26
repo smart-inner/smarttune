@@ -1,17 +1,15 @@
 from flask import Blueprint, request, Response
 from app.models import *
 from app.types import AlgorithmType
-from app import db
+from app import db, executor
 from app.workflow import flow
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pytz import timezone
 from app.parser import KnobParser, MetricParser
-from app.types import VarType
+from app.types import VarType, WorkloadStatusType
 import json
 
 result = Blueprint('result', __name__)
-pool = ThreadPoolExecutor(max_workers=30)
 TIME_ZONE = 'Asia/Shanghai'
 
 @result.route('/generate/<session_name>', methods=['POST'])
@@ -63,6 +61,19 @@ def generate_result(session_name):
     metric_dict = parser.calculate_change_in_metrics(initial_metric_dict, final_metric_dict)
     numeric_metric_dict = parser.convert_system_metrics(metric_dict, session.target_objective)
 
+    # create a new workload if this one does not already exist
+    filters = {
+        Workload.name == summary['workload'],
+        Workload.system_id == session.system_id
+    }
+    workload = Workload.query.filter(*filters).first()
+    if workload is None:
+        db.session.add(Workload(name=summary['workload'], 
+            status=WorkloadStatusType.MODIFIED.value, system_id=session.system_id))
+    else:
+        workload.status = WorkloadStatusType.MODIFIED.value
+    db.session.commit()
+
     # save the result
     db.session.add(Result(
         knob_data=json.dumps(converted_knob_dict), 
@@ -75,7 +86,7 @@ def generate_result(session_name):
 
     result = Result.query.filter(Result.session_id == session.id).order_by(Result.id.desc()).first()
     if session.algorithm == AlgorithmType.GPB.value:
-        pool.submit(flow.gaussian_process_bandits, result.id)
+        executor.submit(flow.gaussian_process_bandits, result.id)
     
     return Response("Result stored successfully! Running tunner with result id: %s" % result.id, status=200)
 

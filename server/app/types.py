@@ -35,3 +35,8 @@ class MetricType(Enum):
     COUNTER = "COUNTER"
     INFO = "INFO"
     STATISTICS = "STATISTICS"
+
+class WorkloadStatusType(Enum):
+    MODIFIED = "MODIFIED"
+    PROCESSING = "PROCESSING"
+    PROCESSED = "PROCESSED"
