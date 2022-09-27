@@ -16,11 +16,11 @@ def preprocessing(result_id, algorithm):
     knobs = get_knobs_for_session(session)
     task_name = get_task_name(session, result_id)
 
-    has_pipeline_data = PipelineData.query.filter(db.exists().where(PipelineData.workload_id == newest_result.workload_id))
-    session_results = Result.query.filter(Result.session_id == session.id)
+    has_pipeline_data = PipelineData.query.filter(PipelineData.workload_id == newest_result.workload_id).first()
+    session_results = Result.query.filter(Result.session_id == session.id).all()
     results_cnt = len(session_results)
 
-    if not has_pipeline_data or results_cnt == 0:
+    if has_pipeline_data is None or results_cnt == 0:
         all_samples = gen_lhs_samples(knobs, NUM_LHS_SAMPLES)
         samples = all_samples.pop()
         target_data['status'] = 'lhs'

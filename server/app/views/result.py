@@ -68,25 +68,31 @@ def generate_result(session_name):
     }
     workload = Workload.query.filter(*filters).first()
     if workload is None:
-        db.session.add(Workload(name=summary['workload'], 
-            status=WorkloadStatusType.MODIFIED.value, system_id=session.system_id))
+        workload = Workload(name=summary['workload'], 
+            status=WorkloadStatusType.MODIFIED.value, system_id=session.system_id)
+        db.session.add(workload)
+        db.session.flush()
+        workload_id = workload.id
     else:
         workload.status = WorkloadStatusType.MODIFIED.value
+        workload_id = workload.id
     db.session.commit()
 
-    # save the result
-    db.session.add(Result(
+    result = Result(
         knob_data=json.dumps(converted_knob_dict), 
         metric_data=json.dumps(numeric_metric_dict), 
         observation_start_time=start_time, 
         observation_end_time=end_time,
         observation_time=observation_time, 
-        session_id=session.id))
+        workload_id = workload_id,
+        session_id=session.id)
+    db.session.add(result)
+    db.session.flush()
+    result_id = result.id
     db.session.commit()
 
-    result = Result.query.filter(Result.session_id == session.id).order_by(Result.id.desc()).first()
     if session.algorithm == AlgorithmType.GPB.value:
-        executor.submit(flow.gaussian_process_bandits, result.id)
+        executor.submit(flow.gaussian_process_bandits, result_id)
     
     return Response("Result stored successfully! Running tunner with result id: %s" % result.id, status=200)
 

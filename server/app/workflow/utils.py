@@ -84,13 +84,13 @@ def gen_lhs_samples(knobs, nsamples):
     for sidx in range(nsamples):
         lhs_samples.append(dict())
         for fidx in range(nfeats):
-            if types[fidx] == VarType.INTEGER:
+            if types[fidx] == VarType.INTEGER.value:
                 lhs_samples[-1][names[fidx]] = int(round(samples[sidx][fidx]))
-            elif types[fidx] == VarType.BOOL:
+            elif types[fidx] == VarType.BOOL.value:
                 lhs_samples[-1][names[fidx]] = int(round(samples[sidx][fidx]))
-            elif types[fidx] == VarType.ENUM:
+            elif types[fidx] == VarType.ENUM.value:
                 lhs_samples[-1][names[fidx]] = int(round(samples[sidx][fidx]))
-            elif types[fidx] == VarType.REAL:
+            elif types[fidx] == VarType.REAL.value:
                 lhs_samples[-1][names[fidx]] = float(samples[sidx][fidx])
             else:
                 logger.warning("LHS: vartype not supported: %s (knob name: %s).",
