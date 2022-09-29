@@ -1,16 +1,16 @@
 from flask import Blueprint, request, Response
+from app.parser import KnobParser, MetricParser
+from app.types import VarType, WorkloadStatusType
+from app.utils import *
 from app.models import *
 from app.types import AlgorithmType
 from app import db, executor
 from app.workflow import flow
 from datetime import datetime
 from pytz import timezone
-from app.parser import KnobParser, MetricParser
-from app.types import VarType, WorkloadStatusType
 import json
 
 result = Blueprint('result', __name__)
-TIME_ZONE = 'Asia/Shanghai'
 
 @result.route('/generate/<session_name>', methods=['POST'])
 def generate_result(session_name):

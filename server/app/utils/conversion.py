@@ -1,4 +1,4 @@
-class ConversionUtil(object):
+class Conversion(object):
 
     DEFAULT_BYTES_SYSTEM = (
         (1024 ** 5, ['PB', 'PiB']),

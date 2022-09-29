@@ -1,13 +1,12 @@
 from app import db
-from .utils import *
 from app.models import *
 from app.types import *
+from app.utils import *
 from loguru import logger
-from app.workflow.utils import *
+from .aggregate_data import *
+from .knob_identification import *
+from .workload_characterization import *
 import time
-
-MIN_WORKLOAD_RESULTS_COUNT = 5
-KNOB_IDENT_USE_PRUNED_METRICS = False
 
 def run_background_tasks():
     start_ts = time.time()
@@ -176,5 +175,5 @@ def run_background_tasks():
     # the background tasks
     pipeline_run.end_time = time.now()
     db.session.commit()
-    save_execution_time(start_ts, "run_background_tasks")
-    logger.info("Finished background tasks (%.0f seconds)." % (time.time() - start_ts))
+    exec_time = TaskUtil.save_execution_time('periodic_task', start_ts, "run_background_tasks")
+    logger.info("Finished background tasks (%.0f seconds)." % exec_time)

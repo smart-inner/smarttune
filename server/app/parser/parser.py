@@ -1,5 +1,5 @@
 from app.types import UnitType
-from .utils import ConversionUtil
+from app.utils import *
 
 class Parser:
     def __init__(self, system_id):
@@ -79,11 +79,11 @@ class Parser:
                 converted = int(float(int_value))
         except ValueError:
             if metadata.unit == UnitType.BYTES.value:
-                converted = ConversionUtil.get_raw_size(
-                    int_value, ConversionUtil.DEFAULT_BYTES_SYSTEM)
+                converted = Conversion.get_raw_size(
+                    int_value, Conversion.DEFAULT_BYTES_SYSTEM)
             elif metadata.unit == UnitType.MILLISECONDS.value:
-                converted = ConversionUtil.get_raw_size(
-                    int_value, ConversionUtil.DEFAULT_TIME_SYSTEM)
+                converted = Conversion.get_raw_size(
+                    int_value, Conversion.DEFAULT_TIME_SYSTEM)
             else:
                 converted = None
         if converted is None:
