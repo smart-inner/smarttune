@@ -40,3 +40,9 @@ class WorkloadStatusType(Enum):
     MODIFIED = "MODIFIED"
     PROCESSING = "PROCESSING"
     PROCESSED = "PROCESSED"
+
+class PipelineTaskType(Enum):
+    PRUNED_METRICS = "Pruned Metrics"
+    RANKED_KNOBS = "Ranked Knobs"
+    KNOB_DATA = "Knob Data"
+    METRIC_DATA = "Metric Data"
