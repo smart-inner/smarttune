@@ -1,4 +1,4 @@
-from app import create_app, scheduler
+from app import create_app
 from config import * 
 
 args = parse_args()

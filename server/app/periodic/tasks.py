@@ -3,6 +3,7 @@ from app.models import *
 from app.types import *
 from app.utils import *
 from loguru import logger
+from datetime import datetime
 from .aggregate_data import *
 from .knob_identification import *
 from .workload_characterization import *
@@ -13,7 +14,7 @@ def run_background_tasks():
     logger.info("Starting background tasks...")
     # Find modified and not modified workloads, we only have to calculate for the
     # modified workloads.
-    modified_workloads = Workflow.query.filter(Workload.status == WorkloadStatusType.MODIFIED.value).all()
+    modified_workloads = Workload.query.filter(Workload.status == WorkloadStatusType.MODIFIED.value).all()
     num_modified = len(modified_workloads)
     non_modified_workloads = Workload.query.filter(Workload.status == WorkloadStatusType.PROCESSED.value).all()
     non_modified_workloads = [workload.id for workload in non_modified_workloads]
@@ -27,7 +28,7 @@ def run_background_tasks():
 
     # Create new entry in PipelineRun table to store the output of each of
     # the background tasks
-    pipeline_run = PipelineRun(start_time=time.now(), end_time=None)
+    pipeline_run = PipelineRun(start_time=datetime.now(), end_time=None)
     db.session.add(pipeline_run)
     db.session.flush()
     pipeline_run_id = pipeline_run.id
@@ -38,7 +39,8 @@ def run_background_tasks():
         db.session.commit()
         wkld_results = Result.query.filter(Result.workload_id == workload.id).all()
         num_wkld_results = len(wkld_results)
-        workload_name = '{}.{}'.format(workload.system_id, workload.name)
+        system = SystemCatalog.query.filter(SystemCatalog.id == workload.system_id).first()
+        workload_name = '{}@{}.{}'.format(system.type, system.version, workload.name)
 
         logger.info("Starting workload %s (%s/%s, # results: %s)..." % (workload_name,
                     i + 1, num_modified, num_wkld_results))
@@ -60,18 +62,8 @@ def run_background_tasks():
 
         logger.info("Aggregating data for workload %s..." % workload_name)
         # Aggregate the knob & metric data for this workload
-        knob_data, metric_data = aggregate_knobs_metrics_data(wkld_results)
+        knob_data, metric_data = aggregate_data(wkld_results)
         logger.info("Done aggregating data for workload %s." % workload_name)
-
-        num_valid_results = knob_data['data'].shape[0]  # pylint: disable=unsubscriptable-object
-        if num_valid_results < MIN_WORKLOAD_RESULTS_COUNT:
-            # Check that there are enough valid results in the workload
-            logger.info("Not enough valid results in workload %s (# valid results: "
-                        "%s, # required: %s)." % (workload_name, num_valid_results,
-                        MIN_WORKLOAD_RESULTS_COUNT))
-            workload.status = WorkloadStatusType.PROCESSED.value
-            db.session.commit()
-            continue
 
         # Knob_data and metric_data are 2D numpy arrays. Convert them into a
         # JSON-friendly (nested) lists and then save them as new PipelineData
@@ -83,7 +75,7 @@ def run_background_tasks():
                                   task_type=PipelineTaskType.KNOB_DATA.value,
                                   workload_id=workload.id,
                                   data=knob_data_copy,
-                                  creation_time=time.now())
+                                  creation_time=datetime.now())
         db.session.add(knob_entry)
 
         metric_data_copy = copy.deepcopy(metric_data)
@@ -93,7 +85,7 @@ def run_background_tasks():
                                     task_type=PipelineTaskType.METRIC_DATA.value,
                                     workload_id=workload.id,
                                     data=metric_data_copy,
-                                    creation_time=time.now())
+                                    creation_time=datetime.now())
         db.session.add(metric_entry)
         db.session.commit()
 
@@ -101,16 +93,15 @@ def run_background_tasks():
         # pruned metrics for this workload and save them in a new PipelineData
         # object.
         logger.info("Pruning metrics for workload %s..." % workload_name)
-        system = SystemCatalog.query.filter(SystemCatalog.id == workload.system_id).first()
-        pruned_metrics = run_workload_characterization(metric_data=metric_data, system=system)
+        pruned_metrics = run_workload_characterization(metric_data, workload.system_id)
         logger.info("Done pruning metrics for workload %s (# pruned metrics: %s).\n\n"
                     "Pruned metrics: %s\n" % (workload_name, len(pruned_metrics),
                     pruned_metrics))
         pruned_metrics_entry = PipelineData(pipeline_run_id=pipeline_run_id,
                                             task_type=PipelineTaskType.PRUNED_METRICS.value,
-                                            workload=workload,
+                                            workload_id=workload.id,
                                             data=json.dumps(pruned_metrics),
-                                            creation_time=time.now())
+                                            creation_time=datetime.now())
         db.session.add(pruned_metrics_entry)
         db.session.commit()
 

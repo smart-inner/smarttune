@@ -5,17 +5,14 @@ import os
 import json
 import copy
 import numpy as np
-from prefect import get_run_logger
+from loguru import logger
 
 from scipy.spatial.distance import cdist
 from sklearn.metrics import silhouette_score
 from sklearn.cluster import KMeans as SklearnKMeans
-from celery.utils.log import get_task_logger
 
 from .base import ModelBase
 
-# Log debug messages
-LOGGER = get_run_logger()
 
 
 class KMeans(ModelBase):
@@ -427,7 +424,7 @@ class GapStatistic(KSelection):
                 break
 
         if self.optimal_num_clusters_ is None:
-            LOGGER.info("GapStatistic NOT found the optimal k, \
+            logger.info("GapStatistic NOT found the optimal k, \
                         use the last(maximum) k instead ")
             self.optimal_num_clusters_ = self.clusters_[-1]
 

@@ -1,4 +1,12 @@
-def run_workload_characterization(metric_data, system=None):
+from app.analysis.preprocessing import Bin, get_shuffle_indices
+from app.analysis.factor_analysis import FactorAnalysis
+from app.analysis.cluster import KMeansClusters, create_kselection_model
+from app.utils import *
+from loguru import logger
+import numpy as np
+import time
+
+def run_workload_characterization(metric_data, system_id=None):
     # Performs workload characterization on the metric_data and returns
     # a set of pruned metrics.
     #
@@ -13,10 +21,6 @@ def run_workload_characterization(metric_data, system=None):
     matrix = metric_data['data']
     columnlabels = metric_data['columnlabels']
 
-    views = None if system is None else VIEWS_FOR_PRUNING.get(system.type, None)
-    matrix, columnlabels = DataUtil.clean_metric_data(matrix, columnlabels, views)
-    LOG.debug("Workload characterization ~ cleaned data size: %s", matrix.shape)
-
     # Bin each column (metric) in the matrix by its decile
     binner = Bin(bin_start=1, axis=0)
     binned_matrix = binner.fit_transform(matrix)
@@ -30,13 +34,11 @@ def run_workload_characterization(metric_data, system=None):
             nonconst_columnlabels.append(cl)
     assert len(nonconst_matrix) > 0, "Need more data to train the model"
     nonconst_matrix = np.hstack(nonconst_matrix)
-    LOG.debug("Workload characterization ~ nonconst data size: %s", nonconst_matrix.shape)
 
     # Remove any duplicate columns
     unique_matrix, unique_idxs = np.unique(nonconst_matrix, axis=1, return_index=True)
     unique_columnlabels = [nonconst_columnlabels[idx] for idx in unique_idxs]
 
-    LOG.debug("Workload characterization ~ final data size: %s", unique_matrix.shape)
     n_rows, n_cols = unique_matrix.shape
 
     # Shuffle the matrix rows
@@ -50,7 +52,6 @@ def run_workload_characterization(metric_data, system=None):
 
     # Components: metrics * factors
     components = fa_model.components_.T.copy()
-    LOG.info("Workload characterization first part costs %.0f seconds.", time.time() - start_ts)
 
     # Run Kmeans for # clusters k in range(1, num_nonduplicate_metrics - 1)
     # K should be much smaller than n_cols in detK, For now max_cluster <= 20
@@ -64,12 +65,12 @@ def run_workload_characterization(metric_data, system=None):
     gapk = create_kselection_model("gap-statistic")
     gapk.fit(components, kmeans_models.cluster_map_)
 
-    LOG.debug("Found optimal number of clusters: %d", gapk.optimal_num_clusters_)
+    logger.info("Found optimal number of clusters: %d" % gapk.optimal_num_clusters_)
 
     # Get pruned metrics, cloest samples of each cluster center
     pruned_metrics = kmeans_models.cluster_map_[gapk.optimal_num_clusters_].get_closest_samples()
 
     # Return pruned metrics
-    save_execution_time(start_ts, "run_workload_characterization")
-    LOG.info("Workload characterization finished in %.0f seconds.", time.time() - start_ts)
+    exec_time = TaskUtil.save_execution_time("periodic_task", start_ts, "run_workload_characterization")
+    logger.info("Workload characterization finished in %.0f seconds." % exec_time)
     return pruned_metrics

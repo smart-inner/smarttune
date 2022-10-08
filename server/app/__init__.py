@@ -13,6 +13,7 @@ def create_app(config_obj):
     app = Flask(__name__)
     app.config.from_object(config_obj)
     db.init_app(app)
+    db.app = app
     executor.init_app(app)
     scheduler.init_app(app)
     scheduler.start()
