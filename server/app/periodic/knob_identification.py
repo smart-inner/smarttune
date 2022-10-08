@@ -1,4 +1,13 @@
-def run_knob_identification(knob_data, metric_data, dbms):
+from app.analysis.preprocessing import DummyEncoder
+from app.analysis.preprocessing import get_shuffle_indices, consolidate_columnlabels
+from app.analysis.lasso import LassoPath
+from app.utils import *
+from sklearn.preprocessing import StandardScaler
+from loguru import logger
+import numpy as np
+import time
+
+def run_knob_identification(knob_data, metric_data, system_id):
     # Performs knob identification on the knob & metric data and returns
     # a set of ranked knobs.
     #
@@ -8,7 +17,7 @@ def run_knob_identification(knob_data, metric_data, dbms):
     #     - 'rowlabels': a list of identifiers for the rows in the matrix
     #     - 'columnlabels': a list of the knob/metric names corresponding
     #           to the columns in the data matrix
-    #   dbms is the foreign key pointing to target dbms in DBMSCatalog
+    #   system_id is the foreign key pointing to target system in SystemCatalog
     #
     # When running the lasso algorithm, the knob_data matrix is set of
     # independent variables (X) and the metric_data is the set of
@@ -44,8 +53,7 @@ def run_knob_identification(knob_data, metric_data, dbms):
     if ENABLE_DUMMY_ENCODER:
         # determine which knobs need encoding (enums with >2 possible values)
 
-        categorical_info = DataUtil.dummy_encoder_helper(nonconst_knob_columnlabels,
-                                                         dbms)
+        categorical_info = DataProcess.dummy_encoder_helper(nonconst_knob_columnlabels, system_id)
         # encode categorical variable first (at least, before standardize)
         dummy_encoder = DummyEncoder(categorical_info['n_values'],
                                      categorical_info['categorical_features'],
@@ -76,6 +84,6 @@ def run_knob_identification(knob_data, metric_data, dbms):
     encoded_knobs = lasso_model.get_ranked_features()
     consolidated_knobs = consolidate_columnlabels(encoded_knobs)
 
-    save_execution_time(start_ts, "run_knob_identification")
-    LOG.info("Knob identification finished in %.0f seconds.", time.time() - start_ts)
+    exec_time = TaskUtil.save_execution_time("periodic_task", start_ts, "run_knob_identification")
+    logger.info("Knob identification finished in %.0f seconds." % exec_time)
     return consolidated_knobs

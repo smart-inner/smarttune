@@ -16,10 +16,6 @@ def run_background_tasks():
     # modified workloads.
     modified_workloads = Workload.query.filter(Workload.status == WorkloadStatusType.MODIFIED.value).all()
     num_modified = len(modified_workloads)
-    non_modified_workloads = Workload.query.filter(Workload.status == WorkloadStatusType.PROCESSED.value).all()
-    non_modified_workloads = [workload.id for workload in non_modified_workloads]
-
-    last_pipeline_run = PipelineRun.query.filter(PipelineRun.end_time != None).order_by(PipelineRun.id.desc()).first()
 
     if num_modified == 0:
         # No previous workload data yet. Try again later.
@@ -106,8 +102,14 @@ def run_background_tasks():
         db.session.commit()
 
         # Workload target objective data
-        ranked_knob_metrics = sorted(wkld_results.distinct('session').values_list(
-            'session__target_objective', flat=True).distinct())
+        unique_session_ids = []
+        for result in wkld_results:
+            if result.session_id in unique_session_ids:
+                continue
+            unique_session_ids.append(result.session_id)
+        unique_sessions = Session.query.filter(Session.id.in_(unique_session_ids)).all()
+        ranked_knob_metrics = sorted([session.target_objective for session in unique_sessions])
+        logger.info("Target objectives for workload %s: %s" % (workload_name, ', '.join(ranked_knob_metrics)))
 
         if KNOB_IDENT_USE_PRUNED_METRICS:
             ranked_knob_metrics = sorted(set(ranked_knob_metrics) + set(pruned_metrics))
@@ -126,26 +128,17 @@ def run_background_tasks():
         # PipelineData object.
         logger.info("Ranking knobs for workload %s (use pruned metric data: %s)..." % \
                     (workload_name, KNOB_IDENT_USE_PRUNED_METRICS))
-        session_ids = []
-        for result in wkld_results:
-            if result.session_id not in session_ids:
-                session_ids.append(result.session_id)
-        sessions = []
-        for id in session_ids:
-            session = Session.query.filter(Session.id == id).first()
-            sessions.append(session)
         rank_knob_data = copy.deepcopy(knob_data)
-        rank_knob_data['data'], rank_knob_data['columnlabels'] = clean_knob_data(knob_data['data'], knob_data['columnlabels'], sessions)
-        ranked_knobs = run_knob_identification(knob_data=rank_knob_data,
-                                               metric_data=ranked_metric_data,
-                                               system=system)
+        rank_knob_data['data'], rank_knob_data['columnlabels'] = \
+            DataProcess.clean_knob_data(knob_data['data'], knob_data['columnlabels'], unique_session_ids)
+        ranked_knobs = run_knob_identification(rank_knob_data, ranked_metric_data, workload.system_id)
         logger.info("Done ranking knobs for workload %s (# ranked knobs: %s).\n\n"
                     "Ranked knobs: %s\n" % (workload_name, len(ranked_knobs), ranked_knobs))
         ranked_knobs_entry = PipelineData(pipeline_run_id=pipeline_run_id,
                                           task_type=PipelineTaskType.RANKED_KNOBS.value,
                                           workload_id=workload.id,
                                           data=json.dumps(ranked_knobs),
-                                          creation_time=time.now())
+                                          creation_time=datetime.now())
         db.session.add(ranked_knobs_entry)
         db.session.commit()
 
@@ -156,15 +149,9 @@ def run_background_tasks():
 
     logger.info("Finished processing %s modified workloads." % num_modified)
 
-    non_modified_workloads = Workload.query.filter(Workflow.id.in_(non_modified_workloads)).all()
-    # Update the latest pipeline data for the non modified workloads to have this pipeline run
-    PipelineData.query.filter(workload__in=non_modified_workloads,
-                              pipeline_run=last_pipeline_run)\
-        .update(pipeline_run=pipeline_run)
-
     # Set the end_timestamp to the current time to indicate that we are done running
     # the background tasks
-    pipeline_run.end_time = time.now()
+    pipeline_run.end_time = datetime.now()
     db.session.commit()
     exec_time = TaskUtil.save_execution_time('periodic_task', start_ts, "run_background_tasks")
     logger.info("Finished background tasks (%.0f seconds)." % exec_time)

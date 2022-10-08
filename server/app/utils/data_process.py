@@ -175,3 +175,54 @@ class DataProcess(object):
                     (nrows, len(knob_cat)), new_matrix.shape)
 
         return new_matrix, new_labels
+
+    @staticmethod
+    def dummy_encoder_helper(featured_knobs, system_id):
+        n_values = []
+        cat_knob_indices = []
+        cat_knob_names = []
+        noncat_knob_names = []
+        binary_knob_indices = []
+        system = SystemCatalog.query.filter(SystemCatalog.id == system_id).first()
+
+        if system is None:
+            raise Exception("SystemCatalog cannot find system_id: {}".format(system_id))
+
+        for i, knob_name in enumerate(featured_knobs):
+            # knob can be uniquely identified by (system, knob_name)
+            filters = {
+                KnobCatalog.name == knob_name,
+                KnobCatalog.system_id == system_id
+            }
+            knobs = KnobCatalog.query.filter(*filters).all()
+            if len(knobs) == 0:
+                raise Exception(
+                    "KnobCatalog cannot find knob of name {} in {}@{}".format(
+                        knob_name, system.type, system.version))
+            knob = knobs[0]
+            # check if knob is ENUM
+            if knob.var_type == VarType.ENUM.value:
+                # enumvals is a comma delimited list
+                enum_vals = knob.enum_vals.split(",")
+                if len(enum_vals) > 2:
+                    # more than 2 values requires dummy encoding
+                    n_values.append(len(enum_vals))
+                    cat_knob_indices.append(i)
+                    cat_knob_names.append(knob_name)
+                else:
+                    # knob is binary
+                    noncat_knob_names.append(knob_name)
+                    binary_knob_indices.append(i)
+            else:
+                if knob.var_type == VarType.BOOL.value:
+                    binary_knob_indices.append(i)
+                noncat_knob_names.append(knob_name)
+
+        n_values = np.array(n_values)
+        cat_knob_indices = np.array(cat_knob_indices)
+        categorical_info = {'n_values': n_values,
+                            'categorical_features': cat_knob_indices,
+                            'cat_columnlabels': cat_knob_names,
+                            'noncat_columnlabels': noncat_knob_names,
+                            'binary_vars': binary_knob_indices}
+        return categorical_info
