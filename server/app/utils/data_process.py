@@ -226,3 +226,41 @@ class DataProcess(object):
                             'noncat_columnlabels': noncat_knob_names,
                             'binary_vars': binary_knob_indices}
         return categorical_info
+
+    @staticmethod
+    def load_pipeline_data(workload_id, pipeline_run_id, task_type):
+        filters = {
+            PipelineData.workload_id == workload_id,
+            PipelineData.pipeline_run_id == pipeline_run_id,
+            PipelineData.task_type == task_type
+        }
+        return json.loads(PipelineData.query.filter(*filters).first().data)
+    
+    @staticmethod
+    def combine_duplicate_rows(X_matrix, y_matrix, rowlabels):
+        X_unique, idxs, invs, cts = np.unique(X_matrix,
+                                              return_index=True,
+                                              return_inverse=True,
+                                              return_counts=True,
+                                              axis=0)
+        num_unique = X_unique.shape[0]
+        if num_unique == X_matrix.shape[0]:
+            # No duplicate rows
+
+            # For consistency, tuple the rowlabels
+            rowlabels = np.array([tuple([x]) for x in rowlabels])  # pylint: disable=bad-builtin,deprecated-lambda
+            return X_matrix, y_matrix, rowlabels
+
+        # Combine duplicate rows
+        y_unique = np.empty((num_unique, y_matrix.shape[1]))
+        rowlabels_unique = np.empty(num_unique, dtype=tuple)
+        ix = np.arange(X_matrix.shape[0])
+        for i, count in enumerate(cts):
+            if count == 1:
+                y_unique[i, :] = y_matrix[idxs[i], :]
+                rowlabels_unique[i] = (rowlabels[idxs[i]],)
+            else:
+                dup_idxs = ix[invs == i]
+                y_unique[i, :] = np.median(y_matrix[dup_idxs, :], axis=0)
+                rowlabels_unique[i] = tuple(rowlabels[dup_idxs])
+        return X_unique, y_unique, rowlabels_unique

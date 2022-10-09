@@ -1,20 +1,19 @@
-from app.analysis import *
 from app.models import *
 from app.utils import *
 from loguru import logger
 import time
 
-def aggregate_target_results(result_id, algorithm, preprocess_data):
+def aggregate_target_results(result_id, algorithm, data):
     start_ts = time.time()
     newest_result = Result.query.filter(Result.id == result_id).first()
     session = Session.query.filter(Session.id == newest_result.session_id).first()
     task_name = TaskUtil.get_task_name(session, result_id)
 
-    if 'config_recommend' in preprocess_data:
-        assert 'newest_result_id' in preprocess_data and 'status' in preprocess_data
+    if 'config_recommend' in data:
+        assert 'newest_result_id' in data and 'status' in data
         logger.info('%s: Skipping aggregate_target_results (status=%s).' % (task_name,
-                    preprocess_data.get('status', '')))
-        return preprocess_data
+                    data.get('status', '')))
+        return data
 
     logger.info("%s: Aggregating target results..." % task_name)
 
@@ -39,5 +38,5 @@ def aggregate_target_results(result_id, algorithm, preprocess_data):
     agg_data['X_columnlabels'] = np.array(cleaned_agg_data[1])
 
     exec_time = TaskUtil.save_execution_time("async_task", start_ts, "aggregate_target_results", newest_result.id)
-    logger.info('%s: Finished aggregating target results (%.1f seconds).', task_name, exec_time)
+    logger.info('%s: Finished aggregating target results (%.1f seconds).' % (task_name, exec_time))
     return agg_data

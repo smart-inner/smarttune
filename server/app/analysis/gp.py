@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.distance import cdist as ed
 from scipy import special
-from analysis.gp_tf import GPRResult
+from .gp_tf import GPRResult
 
 
 # numpy version of Gaussian Process Regression, not using Tensorflow

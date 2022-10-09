@@ -155,3 +155,4 @@ def run_background_tasks():
     db.session.commit()
     exec_time = TaskUtil.save_execution_time('periodic_task', start_ts, "run_background_tasks")
     logger.info("Finished background tasks (%.0f seconds)." % exec_time)
+    return 0

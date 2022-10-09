@@ -261,7 +261,7 @@ def run_optimize(X, y, X_samples, model_name, opt_kwargs, model_kwargs):
     model_creation_sec = timer.elapsed_seconds
     LOG.info(m.model.as_pandas_table())
 
-    # Optimize the DBMS's configuration knobs
+    # Optimize the system's configuration knobs
     timer.start()
     res = tf_optimize(m.model, X_samples, **opt_kwargs)
     timer.stop()
