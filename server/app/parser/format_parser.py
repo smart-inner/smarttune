@@ -16,9 +16,7 @@ class FormatParser(Parser):
             }
             metadata = KnobCatalog.query.filter(*filters).first()
             fvalue = None
-            if metadata.var_type == VarType.BOOL.value:
-                fvalue = self.format_bool(knob_value)
-            elif metadata.var_type == VarType.ENUM.value:
+            if metadata.var_type == VarType.ENUM.value:
                 fvalue = self.format_enum(knob_value, metadata)
             elif metadata.var_type == VarType.INTEGER.value:
                 fvalue = self.format_integer(knob_value, metadata)

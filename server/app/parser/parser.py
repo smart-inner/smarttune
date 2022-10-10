@@ -7,8 +7,6 @@ class Parser:
         self.system_id = system_id
         self.conversion_system = json.loads(
             SystemCatalog.query.filter(SystemCatalog.id == self.system_id).first().conversion)
-        self.valid_true_val = ("on", "true", "yes")
-        self.valid_false_val = ("off", "false", "no")
 
     def parse_system_variables(self, variables):
         valid_variables = {}
@@ -46,26 +44,12 @@ class Parser:
         assert len(valid_variables) == len(catalog)
         return valid_variables
 
-    def convert_bool(self, bool_value, metadata):
-        if isinstance(bool_value, str):
-            bool_value = bool_value.lower()
-
-        if bool_value in self.valid_true_val:
-            res = int(True)
-        elif bool_value in self.valid_false_val:
-            res = int(False)
-        else:
-            raise Exception("Invalid boolean value for variable {} ({})".format(
-                metadata.name, bool_value))
-
-        return res
-
     def convert_enum(self, enum_value, metadata):
-        enumvals = metadata.enumvals.split(',')
-        lower_enumvals = [ev.lower() for ev in enumvals]
+        enum_vals = metadata.enum_vals.split(',')
+        lower_enum_vals = [ev.lower() for ev in enum_vals]
         lower_enum_value = enum_value.lower()
         try:
-            res = lower_enumvals.index(lower_enum_value)
+            res = lower_enum_vals.index(lower_enum_value)
         except ValueError:
             raise Exception('Invalid enum value for variable {} ({})'.format(
                 metadata.name, enum_value))
@@ -102,13 +86,9 @@ class Parser:
             raise Exception('Cannot convert knob {} from {} to float'.format(
                 metadata.name, real_value))
 
-    def format_bool(self, bool_value):
-        boolean_system = self.conversion_system['BOOLEAN_SYSTEM']
-        return boolean_system['true_value'] if int(round(bool_value)) == 1 else boolean_system['false_value']
-
     def format_enum(self, enum_value, metadata):
-        enumvals = metadata.enum_vals.split(',')
-        return enumvals[int(round(enum_value))]
+        enum_vals = metadata.enum_vals.split(',')
+        return enum_vals[int(round(enum_value))]
 
     def format_integer(self, int_value, metadata):
         int_value = int(round(int_value))

@@ -10,7 +10,6 @@ class VarType(Enum):
     STRING = "STRING"
     INTEGER = "INTEGER"
     REAL = "REAL"
-    BOOL = "BOOL"
     ENUM = "ENUM"
     TIMESTAMP = "TIMESTAMP"
 

@@ -13,11 +13,6 @@ class KnobParser(Parser):
             valid_knobs[key] = valid_knobs[key][0]
         knob_catalog = {knob.name: knob for knob in KnobCatalog.query.filter(KnobCatalog.system_id == self.system_id)}
         return self.extract_valid_variables(valid_knobs, knob_catalog)
-
-    def check_knob_bool_val(self, value):
-        if isinstance(value, str):
-            value = value.lower()
-        return value in self.valid_true_val or value in self.valid_false_val
     
     def check_knob_value_in_range(self, value, metadata):
         if metadata.min_val is None or metadata.max_val is None:
@@ -42,11 +37,7 @@ class KnobParser(Parser):
             value = knobs[name]
             conv_value = None
 
-            if metadata.var_type == VarType.BOOL.value:
-                if not self.check_knob_bool_val(value):
-                    raise Exception("Knob '%s' boolean value not valid!" % name)
-                conv_value = self.convert_bool(value, metadata)
-            elif metadata.var_type == VarType.ENUM.value:
+            if metadata.var_type == VarType.ENUM.value:
                 conv_value = self.convert_enum(value, metadata)
             elif metadata.var_type == VarType.INTEGER.value:
                 conv_value = self.convert_integer(value, metadata)

@@ -26,9 +26,6 @@ class DataProcess(object):
                 enum_vals = knob.enum_vals.split(',')
                 knob_info['min_val'] = '0'
                 knob_info['max_val'] = str(len(enum_vals) - 1)
-            if knob.var_type == VarType.BOOL.value:
-                knob_info['min_val'] = '0'
-                knob_info['max_val'] = '1'
             knob_infos.append(knob_info)
 
         return knob_infos
@@ -72,8 +69,6 @@ class DataProcess(object):
             lhs_samples.append(dict())
             for fidx in range(nfeats):
                 if types[fidx] == VarType.INTEGER.value:
-                    lhs_samples[-1][names[fidx]] = int(round(samples[sidx][fidx]))
-                elif types[fidx] == VarType.BOOL.value:
                     lhs_samples[-1][names[fidx]] = int(round(samples[sidx][fidx]))
                 elif types[fidx] == VarType.ENUM.value:
                     lhs_samples[-1][names[fidx]] = int(round(samples[sidx][fidx]))
@@ -150,8 +145,6 @@ class DataProcess(object):
                 try:
                     if knob['var_type'] == VarType.ENUM.value:
                         default_val = knob['enum_vals'].split(',').index(default_val)
-                    elif knob['var_type'] == VarType.BOOL.value:
-                        default_val = str(default_val).lower() in ("on", "true", "yes", "0")
                     else:
                         default_val = float(default_val)
                 except ValueError:
@@ -202,7 +195,7 @@ class DataProcess(object):
             knob = knobs[0]
             # check if knob is ENUM
             if knob.var_type == VarType.ENUM.value:
-                # enumvals is a comma delimited list
+                # enum_vals is a comma delimited list
                 enum_vals = knob.enum_vals.split(",")
                 if len(enum_vals) > 2:
                     # more than 2 values requires dummy encoding
@@ -214,8 +207,6 @@ class DataProcess(object):
                     noncat_knob_names.append(knob_name)
                     binary_knob_indices.append(i)
             else:
-                if knob.var_type == VarType.BOOL.value:
-                    binary_knob_indices.append(i)
                 noncat_knob_names.append(knob_name)
 
         n_values = np.array(n_values)

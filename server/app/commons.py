@@ -19,11 +19,7 @@ DEFAULT_CONVERSION = '''{
             "s": "1000",
             "ms": "1"
         },
-        "MIN_TIME_UNIT": "ms",
-        "BOOLEAN_SYSTEM": {
-            "true_value": "on",
-            "false_value": "off"
-        }
+        "MIN_TIME_UNIT": "ms"
     }'''
 DEFAULT_HYPER_PARAMETERS = '''{
         "DDPG_ACTOR_HIDDEN_SIZES": [128, 128, 64],
