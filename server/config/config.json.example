@@ -1,0 +1,4 @@
+{
+    "db_url": "mysql://<username>:<password>@<server>/<db_name>",
+    "testing": true
+}
