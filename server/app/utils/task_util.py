@@ -3,7 +3,7 @@ from app import db
 from app.parser import *
 from datetime import datetime
 from pytz import timezone
-from .commons import *
+from app.commons import *
 import time, json
 
 class TaskUtil(object):
@@ -23,7 +23,8 @@ class TaskUtil(object):
 
     @staticmethod
     def create_and_save_recommendation(recommended_knobs, result, status, **kwargs):
-        system_id = result.system_id
+        session = Session.query.filter(Session.id == result.session_id).first()
+        system_id = session.system_id
         parser = FormatParser(system_id)
         formatted_knobs = parser.format_system_knobs(recommended_knobs)
         config = parser.create_knob_configuration(formatted_knobs)

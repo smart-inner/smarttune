@@ -1,5 +1,4 @@
 from enum import Enum
-from tkinter.tix import INTEGER
 
 class SystemType(Enum):
     TIDB = "TiDB"

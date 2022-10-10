@@ -1,6 +1,8 @@
+from cmath import log
 from app.models import *
 from app.utils import *
 from app.types import *
+from app.commons import *
 from app.analysis.nn_tf import NeuralNet
 from app.analysis.gpr import gpr_models
 from app.analysis.gpr.optimize import tf_optimize
@@ -248,7 +250,7 @@ def configuration_recommendation(data, algorithm):
         session.dnn_model = model_nn.get_weights_bin()
         session.save()
 
-    elif algorithm == AlgorithmType.GPR:
+    elif algorithm == AlgorithmType.GPB:
         info_msg += 'Recommended by GPR.'
         # default gpr model
         if params['GPR_USE_GPFLOW']:
@@ -305,7 +307,6 @@ def configuration_recommendation(data, algorithm):
     conf_map = {k: best_config[i] for i, k in enumerate(X_columnlabels)}
     newest_result.pipeline_knobs = pipeline_knobs
     newest_result.pipeline_metrics = pipeline_metrics
-
     conf_map_res = TaskUtil.create_and_save_recommendation(
         recommended_knobs=conf_map, result=newest_result,
         status='good', info=info_msg, pipeline_run=data['pipeline_run'])

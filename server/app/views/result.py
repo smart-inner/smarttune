@@ -3,6 +3,7 @@ from app.parser import KnobParser, MetricParser
 from app.types import VarType, WorkloadStatusType
 from app.utils import *
 from app.models import *
+from app.commons import *
 from app.types import AlgorithmType
 from app import db, executor
 from app.workflow import flow
@@ -46,7 +47,7 @@ def generate_result(session_name):
     filters = {
         KnobCatalog.system_id == session.system_id,
         KnobCatalog.var_type != VarType.STRING.value,
-        KnobCatalog.var_type != VarType.TIEMSTAMP.value,
+        KnobCatalog.var_type != VarType.TIMESTAMP.value,
         KnobCatalog.tunable == True
     }
     knob_to_convert = KnobCatalog.query.filter(*filters).all()
@@ -98,4 +99,12 @@ def generate_result(session_name):
 
 @result.route('/query/<session_name>', methods=['GET'])
 def query_result(session_name):
-    return flow.gaussian_process_bandits("123")
+    session = Session.query.filter(Session.name == session_name).first()
+    if session is None:
+        return Response("Invalid session: '%s'" % session_name, status=404)
+    result = Result.query.filter(Result.session_id == 
+        session.id).order_by(Result.creation_time.desc()).first()
+    next_configuration = result.next_configuration
+    if next_configuration is None:
+        return Response("Not found next configuration", status=404)
+    return Response(next_configuration, status=200)

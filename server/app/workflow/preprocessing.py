@@ -1,10 +1,9 @@
 from app.analysis import *
 from app.models import *
 from app.utils import *
+from app.commons import *
 from loguru import logger
 import time
-
-NUM_LHS_SAMPLES = 10
 
 def preprocessing(result_id, algorithm):
     start_ts = time.time()

@@ -36,6 +36,7 @@ def create_session():
         description=session['description'],
         algorithm=session.get('algorithm', AlgorithmType.GPB.value),
         target_objective='global.' + session['target_objective'],
+        more_is_better=session.get('more_is_better', True),
         hyper_parameters=session['hyper_parameters']))
     db.session.commit()
     return Response("Success to create session '%s' for %s:%s" % (session['name'], system_type, version), status=200)
