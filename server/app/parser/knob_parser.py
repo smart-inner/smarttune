@@ -58,7 +58,7 @@ class KnobParser(Parser):
                 if not self.check_knob_value_in_range(conv_value, metadata):
                     raise Exception("Knob '%s' real value not in range, min: %s, max: %s, "
                                     "actual: %s" % (name, metadata.min_val, metadata.max_val, str(conv_value)))
-            elif metadata.var_type == VarType.STRING.value or metadata.var_type == VarType.TIEMSTAMP.value:
+            elif metadata.var_type == VarType.STRING.value or metadata.var_type == VarType.TIMESTAMP.value:
                 conv_value = value
             else:
                 raise Exception('Unknown variable type: %s' % metadata.var_type)

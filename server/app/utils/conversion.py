@@ -1,33 +1,49 @@
+import math
+
 class Conversion(object):
-
-    DEFAULT_BYTES_SYSTEM = (
-        (1024 ** 5, ['PB', 'PiB']),
-        (1024 ** 4, ['TB', 'TiB']),
-        (1024 ** 3, ['GB', 'GiB']),
-        (1024 ** 2, ['MB', 'MiB']),
-        (1024 ** 1, ['KB', 'KiB']),
-        (1024 ** 0, ['B']),
-    )
-
-    DEFAULT_TIME_SYSTEM = (
-        (1000 * 60 * 60 * 24, ['d']),
-        (1000 * 60 * 60, ['h']),
-        (1000 * 60, ['min', 'm']),
-        (1000, ['s']),
-        (1, ['ms']),
-    )
-
     @staticmethod
     def get_raw_size(value, system):
-        for factor, suffixs in system:
-            for suffix in suffixs:
-                if value.endswith(suffix):
-                    if len(value) == len(suffix):
-                        amount = 1
-                    else:
-                        try:
-                            amount = int(value[:-len(suffix)])
-                        except ValueError:
-                            continue
-                    return amount * factor
+        for suffix, factor in system.items():
+            if value.endswith(suffix):
+                if len(value) == len(suffix):
+                    amount = 1
+                else:
+                    try:
+                        amount = int(value[:-len(suffix)])
+                    except ValueError:
+                        continue
+                return amount * eval(factor)
         return None
+    
+    @staticmethod
+    def get_human_readable(value, system, min_suffix):
+        # Converts the value to larger units only if there is no loss of resolution.
+        min_factor = None
+        unit = None
+        mod_system = []
+        for suffix, factor in system.items():
+            if suffix == min_suffix:
+                if value < eval(factor):
+                    return value
+                min_factor = eval(factor)
+                unit = min_suffix
+                value = math.floor(float(value) / min_factor)
+                break
+            mod_system.append((eval(factor), suffix))
+
+        if min_factor is None:
+            raise ValueError('Invalid min suffix for system: suffix={}, system={}'.format(
+                min_suffix, system))
+
+        for factor, suffix in mod_system:
+            adj_factor = factor / min_factor
+            if value % adj_factor == 0:
+                value = math.floor(float(value) / adj_factor)
+                unit = suffix
+                break
+            if value / adj_factor > 100:
+                value = round(value / adj_factor)
+                unit = suffix
+                break
+
+        return '{}{}'.format(int(value), unit)

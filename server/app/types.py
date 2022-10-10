@@ -13,7 +13,7 @@ class VarType(Enum):
     REAL = "REAL"
     BOOL = "BOOL"
     ENUM = "ENUM"
-    TIEMSTAMP = "TIEMSTAMP"
+    TIMESTAMP = "TIMESTAMP"
 
 class UnitType(Enum):
     BYTES = "bytes"

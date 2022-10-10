@@ -4,7 +4,7 @@ from gpflow import settings
 from sklearn.utils import assert_all_finite, check_array
 from sklearn.utils.validation import FLOAT_DTYPES
 
-from analysis.util import get_analysis_logger
+from app.analysis.util import get_analysis_logger
 
 LOG = get_analysis_logger(__name__)
 

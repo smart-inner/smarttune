@@ -1,9 +1,12 @@
 from app.types import UnitType
 from app.utils import *
+from app.models import *
 
 class Parser:
     def __init__(self, system_id):
         self.system_id = system_id
+        self.conversion_system = json.loads(
+            SystemCatalog.query.filter(SystemCatalog.id == self.system_id).first().conversion)
         self.valid_true_val = ("on", "true", "yes")
         self.valid_false_val = ("off", "false", "no")
 
@@ -80,10 +83,10 @@ class Parser:
         except ValueError:
             if metadata.unit == UnitType.BYTES.value:
                 converted = Conversion.get_raw_size(
-                    int_value, Conversion.DEFAULT_BYTES_SYSTEM)
+                    int_value, self.conversion_system['BYTES_SYSTEM'])
             elif metadata.unit == UnitType.MILLISECONDS.value:
                 converted = Conversion.get_raw_size(
-                    int_value, Conversion.DEFAULT_TIME_SYSTEM)
+                    int_value, self.conversion_system['TIME_SYSTEM'])
             else:
                 converted = None
         if converted is None:
@@ -98,3 +101,36 @@ class Parser:
         except ValueError:
             raise Exception('Cannot convert knob {} from {} to float'.format(
                 metadata.name, real_value))
+
+    def format_bool(self, bool_value):
+        boolean_system = self.conversion_system['BOOLEAN_SYSTEM']
+        return boolean_system['true_value'] if int(round(bool_value)) == 1 else boolean_system['false_value']
+
+    def format_enum(self, enum_value, metadata):
+        enumvals = metadata.enum_vals.split(',')
+        return enumvals[int(round(enum_value))]
+
+    def format_integer(self, int_value, metadata):
+        int_value = int(round(int_value))
+        if metadata.unit != UnitType.OTHER.value and int_value > 0:
+            if metadata.unit == UnitType.BYTES.value:
+                int_value = Conversion.get_human_readable(
+                    int_value, self.conversion_system['BYTES_SYSTEM'], self.conversion_system['MIN_BYTES_UNIT'])
+            elif metadata.unit == UnitType.MILLISECONDS.value:
+                int_value = Conversion.get_human_readable(
+                    int_value, self.conversion_system['TIME_SYSTEM'], self.conversion_system['MIN_TIME_UNIT'])
+            else:
+                raise Exception(
+                    'Invalid unit type for {}: {}'.format(
+                        metadata.name, metadata.unit))
+
+        return int_value
+
+    def format_real(self, real_value):
+        return round(float(real_value), 3)
+
+    def format_string(self, string_value):
+        return string_value
+
+    def format_timestamp(self, timestamp_value):
+        return timestamp_value
