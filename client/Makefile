@@ -1,8 +1,8 @@
 include Makefile.common
-.PHONY: all smart-ctl
-all: smart-ctl
+.PHONY: all smartctl
+all: smartctl
 
-smart-ctl:
-	@echo "start to build smart-ctl"
+smartctl:
+	@echo "start to build smartctl"
 	$(GOBUILD) -o bin/smartctl cmd/smartctl/*.go
-	@echo "build smart-ctl successfully"
+	@echo "build smartctl successfully"
