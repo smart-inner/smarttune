@@ -10,22 +10,14 @@ import (
 )
 
 type SmartctlOptions struct {
-	Arguments []string
 	genericclioptions.IOStreams
 }
 
 // NewDefaultSmartctlCommand creates the `smartctl` command with default arguments
 func NewDefaultSmartctlCommand() *cobra.Command {
-	return NewDefaultSmartctlCommandWithArgs(SmartctlOptions{
-		Arguments: os.Args,
+	return NewSmartctlCommand(SmartctlOptions{
 		IOStreams: genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
 	})
-}
-
-// NewDefaultSmartctlCommandWithArgs creates the `smartctl` command with arguments
-func NewDefaultSmartctlCommandWithArgs(o SmartctlOptions) *cobra.Command {
-	cmd := NewSmartctlCommand(o)
-	return cmd
 }
 
 // NewSmartctlCommand creates the `kubectl` command and its nested children.
@@ -55,13 +47,13 @@ Find more information at: https://github.com/smart-inner/smarttune`,
 		{
 			Message: "Init Commands:",
 			Commands: []*cobra.Command{
-				create.NewCmdCreate(),
+				create.NewCmdCreate(o.IOStreams),
 			},
 		},
 		{
 			Message: "Tuning Commands:",
 			Commands: []*cobra.Command{
-				tune.NewCmdRun(),
+				tune.NewCmdRun(o.IOStreams),
 			},
 		},
 	}
