@@ -1,0 +1,7 @@
+{
+  "session_name": "{{ .SessionName }}",
+  "tuning_knobs": {
+    "global": ["tidb.performance.gogc", "tikv.raft-engine.enable"],
+    "local": null
+  }
+}

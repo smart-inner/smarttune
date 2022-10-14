@@ -1,0 +1,62 @@
+{
+  "system_type": "TiDB",
+  "version": "v6.1.0",
+  "knobs": [
+    {
+      "name": "tidb.performance.gogc",
+      "var_type": "INTEGER",
+      "unit": "other",
+      "category": "tidb_variables",
+      "description": "The Go GC trigger factor",
+      "scope": "global",
+      "min_val": "100",
+      "max_val": "400",
+      "default": "100",
+      "enum_vals": null,
+      "tunable": true,
+      "resource": "Memory"
+    },
+    {
+      "name": "tidb.tikv-client.copr-cache.capacity-mb",
+      "var_type": "REAL",
+      "unit": "other",
+      "category": "tidb_variables",
+      "description": "The capacity in MB of the cache.",
+      "scope": "global",
+      "min_val": "0.0",
+      "max_val": "3000.0",
+      "default": "1000.0",
+      "enum_vals": null,
+      "tunable": true,
+      "resource": "Memory"
+    },
+    {
+      "name": "tikv.raft-engine.enable",
+      "var_type": "ENUM",
+      "unit": "other",
+      "category": "tikv_variables",
+      "description": "Determines whether to use Raft Engine to store raft logs",
+      "scope": "global",
+      "min_val": null,
+      "max_val": null,
+      "default": true,
+      "enum_vals": "false,true",
+      "tunable": true,
+      "resource": "Other"
+    },
+    {
+      "name": "tikv.storage.block-cache.capacity",
+      "var_type": "INTEGER",
+      "unit": "bytes",
+      "category": "tikv_variables",
+      "description": "Size of the shared block cache",
+      "scope": "global",
+      "min_val": "8388608",
+      "max_val": "68719476736",
+      "default": "8388608",
+      "enum_vals": null,
+      "tunable": true,
+      "resource": "Memory"
+    }
+  ]
+}
