@@ -68,10 +68,13 @@ func (o *CreateOptions) RegisterSystemCatalog(file string) error {
 	if err != nil {
 		return err
 	}
+	var build strings.Builder
+	build.WriteString(string(body))
+	build.WriteString("\n")
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(o.ErrOut, string(body))
+		fmt.Fprintf(o.ErrOut, build.String())
 	}
-	fmt.Fprintf(o.Out, string(body))
+	fmt.Fprintf(o.Out, build.String())
 	return nil
 }
 
@@ -91,10 +94,13 @@ func (o *CreateOptions) RegisterKnobsCatalog(file string) error {
 	if err != nil {
 		return err
 	}
+	var build strings.Builder
+	build.WriteString(string(body))
+	build.WriteString("\n")
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(o.ErrOut, string(body))
+		fmt.Fprintf(o.ErrOut, build.String())
 	}
-	fmt.Fprintf(o.Out, string(body))
+	fmt.Fprintf(o.Out, build.String())
 	return nil
 }
 
@@ -114,10 +120,13 @@ func (o *CreateOptions) RegisterMetricsCatalog(file string) error {
 	if err != nil {
 		return err
 	}
+	var build strings.Builder
+	build.WriteString(string(body))
+	build.WriteString("\n")
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(o.ErrOut, string(body))
+		fmt.Fprintf(o.ErrOut, build.String())
 	}
-	fmt.Fprintf(o.Out, string(body))
+	fmt.Fprintf(o.Out, build.String())
 	return nil
 }
 
@@ -145,10 +154,13 @@ func (o *CreateOptions) RegisterSession(file string) error {
 	if err != nil {
 		return err
 	}
+	var build strings.Builder
+	build.WriteString(string(body))
+	build.WriteString("\n")
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(o.ErrOut, string(body))
+		fmt.Fprintf(o.ErrOut, build.String())
 	}
-	fmt.Fprintf(o.Out, string(body))
+	fmt.Fprintf(o.Out, build.String())
 	return nil
 }
 
@@ -176,10 +188,13 @@ func (o *CreateOptions) RegisterTuningKnobs(file string) error {
 	if err != nil {
 		return err
 	}
+	var build strings.Builder
+	build.WriteString(string(body))
+	build.WriteString("\n")
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(o.ErrOut, string(body))
+		fmt.Fprintf(o.ErrOut, build.String())
 	}
-	fmt.Fprintf(o.Out, string(body))
+	fmt.Fprintf(o.Out, build.String())
 	return nil
 }
 
