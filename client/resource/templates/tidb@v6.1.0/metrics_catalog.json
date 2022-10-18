@@ -1,0 +1,22 @@
+{
+  "system_type": "TiDB",
+  "version": "v6.1.0",
+  "metrics": [
+    {
+      "name":"tidb.tidb_qps",
+      "var_type": "REAL",
+      "unit": "other",
+      "description": "The throughput of the tidb server",
+      "metric_type": "STATISTICS",
+      "scope": "global"
+    },
+    {
+      "name":"tidb.tidb_query_duration",
+      "var_type": "REAL",
+      "unit": "seconds",
+      "description": "The query duration of the tidb server",
+      "metric_type": "STATISTICS",
+      "scope": "global"
+    }
+  ]
+}

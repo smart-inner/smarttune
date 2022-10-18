@@ -1,0 +1,11 @@
+PROJECT=smarttune
+
+GOPATH ?= $(shell go env GOPATH)
+
+# Ensure GOPATH is set before running build process.
+ifeq "$(GOPATH)" ""
+  $(error Please set the environment variable GOPATH before running 'make')
+endif
+
+GO      := GO111MODULE=on go
+GOBUILD := $(GO) build $(BUILD_FLAG) -tags codes

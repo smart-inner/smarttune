@@ -1,0 +1,11 @@
+{
+  "system_type": "TiDB",
+  "version": "v6.1.0",
+  "session": {
+    "name": "{{ .SessionName }}",
+    "description": "tune tidb cluster",
+    "algorithm": "Gaussian Process Bandits",
+    "target_objective": "{{ .Target }}",
+    "hyper_parameters": null
+  }
+}
