@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/smart-inner/smarttune/collector"
+	"github.com/smart-inner/smarttune/driver"
 	"github.com/smart-inner/smarttune/pkg/genericclioptions"
 	"github.com/smart-inner/smarttune/util"
 	"github.com/smart-inner/smarttune/util/http"
@@ -15,12 +16,17 @@ import (
 )
 
 type RunOptions struct {
-	Backend string
-	MaxIter int32
-	Url     string
-	Tools   string
+	Backend     string
+	MaxIter     int32
+	Url         string
+	Tools       string
+	SessionName string
 
 	genericclioptions.IOStreams
+}
+
+type Result struct {
+	Recommendation map[string]interface{}
 }
 
 func NewRunOptions(streams genericclioptions.IOStreams) *RunOptions {
@@ -49,10 +55,39 @@ func addRunFlags(cmd *cobra.Command, opt *RunOptions) {
 	cmd.Flags().StringVar(&opt.Backend, "backend", "", "The backend url for smarttune, such as '127.0.0.1:5000'")
 	cmd.Flags().Int32Var(&opt.MaxIter, "max_iter", 1, "The max iteration for algorithm")
 	cmd.Flags().StringVar(&opt.Url, "url", "", "The url for accessing target system")
-	cmd.Flags().StringVar(&opt.Tools, "tools", "", "The tools for updating system's configuration")
+	cmd.Flags().StringVar(&opt.Tools, "tools", "tiup", "The tools for updating system's configuration")
 }
 
-func (o *RunOptions) Loop(iter int, arg string) error {
+func (o *RunOptions) GetResult(maxTimeSec, intervalSec int) (*Result, error) {
+	url := fmt.Sprintf("http://%s/api/result/query/%s", o.Backend, o.SessionName)
+	elapsed := 0
+
+	for elapsed <= maxTimeSec {
+		request := make(map[string]string)
+		headers := make(map[string]string)
+		resp, err := http.Get(url, request, headers)
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode == 200 {
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			var result Result
+			if err = json.Unmarshal(body, &result); err != nil {
+				return nil, err
+			}
+			return &result, nil
+		} else {
+			fmt.Fprintf(o.Out, "Unable to obtain result, status: %s\n", resp.Status)
+		}
+		elapsed += intervalSec
+	}
+	return nil, errors.New("failed to download the nex config")
+}
+
+func (o *RunOptions) Loop(iter int) error {
 	c := &collector.TiDBCollector{Url: o.Url}
 	fmt.Fprintf(o.Out, "Start to collect knobs\n")
 	knobs, err := c.CollectKnobs()
@@ -90,7 +125,7 @@ func (o *RunOptions) Loop(iter int, arg string) error {
 	request["knobs"] = knobs
 	request["metrics_before"] = beforeMetrics
 	request["metrics_after"] = afterMetrics
-	url := fmt.Sprintf("http://%s/api/result/generate/%s", o.Backend, arg)
+	url := fmt.Sprintf("http://%s/api/result/generate/%s", o.Backend, o.SessionName)
 	headers := make(map[string]string)
 	resp, err := http.PostJSON(url, request, headers)
 	if err != nil {
@@ -108,30 +143,31 @@ func (o *RunOptions) Loop(iter int, arg string) error {
 	}
 	fmt.Fprintf(o.Out, build.String())
 
-	url = fmt.Sprintf("http://%s/api/result/query/%s", o.Backend, arg)
-	getRequest := make(map[string]string)
-	resp, err = http.Get(url, getRequest, headers)
+	result, err := o.GetResult(180, 5)
 	if err != nil {
 		return err
 	}
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(body))
 
+	d := &driver.TiDBDriver{
+		Tools: o.Tools,
+		Url:   o.Url,
+	}
+	if err = d.ChangeConf(result.Recommendation); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (o *RunOptions) Run(args []string) error {
 	if len(args) != 1 || len(o.Backend) == 0 || len(o.Url) == 0 {
 		return errors.New(fmt.Sprintf("Error: invalid subcommand "+
-			"'smartctl create %s --backend=%s --url=%s'", strings.Join(args, " "), o.Backend, o.Url))
+			"'smartctl run %s --backend=%s --url=%s'", strings.Join(args, " "), o.Backend, o.Url))
 	}
+	o.SessionName = args[0]
 	for i := 0; i < int(o.MaxIter); i++ {
 		// system is ready
 		fmt.Fprintf(o.Out, "The %d-th Loop Starts / Total Loops %d\n", i+1, o.MaxIter)
-		if err := o.Loop(i, args[0]); err != nil {
+		if err := o.Loop(i); err != nil {
 			return err
 		}
 		fmt.Fprintf(o.Out, "The %d-th Loop Ends / Total Loops %d\n", i+1, o.MaxIter)
