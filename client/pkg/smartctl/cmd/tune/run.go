@@ -20,6 +20,7 @@ type RunOptions struct {
 	MaxIter     int32
 	Url         string
 	Tools       string
+	ClusterName string
 	SessionName string
 
 	genericclioptions.IOStreams
@@ -56,6 +57,7 @@ func addRunFlags(cmd *cobra.Command, opt *RunOptions) {
 	cmd.Flags().Int32Var(&opt.MaxIter, "max_iter", 1, "The max iteration for algorithm")
 	cmd.Flags().StringVar(&opt.Url, "url", "", "The url for accessing target system")
 	cmd.Flags().StringVar(&opt.Tools, "tools", "tiup", "The tools for updating system's configuration")
+	cmd.Flags().StringVar(&opt.ClusterName, "cluster_name", "debug", "The cluster name for tuning")
 }
 
 func (o *RunOptions) GetResult(maxTimeSec, intervalSec int) (*Result, error) {
@@ -149,8 +151,9 @@ func (o *RunOptions) Loop(iter int) error {
 	}
 
 	d := &driver.TiDBDriver{
-		Tools: o.Tools,
-		Url:   o.Url,
+		Tools:       o.Tools,
+		Url:         o.Url,
+		ClusterName: o.ClusterName,
 	}
 	if err = d.ChangeConf(result.Recommendation); err != nil {
 		return err

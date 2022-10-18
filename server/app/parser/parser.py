@@ -88,6 +88,8 @@ class Parser:
 
     def format_enum(self, enum_value, metadata):
         enum_vals = metadata.enum_vals.split(',')
+        if "false" in enum_vals and "true" in enum_vals:
+            return True if enum_vals[int(round(enum_value))] == 'true' else False
         return enum_vals[int(round(enum_value))]
 
     def format_integer(self, int_value, metadata):
