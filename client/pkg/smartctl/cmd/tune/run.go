@@ -54,7 +54,7 @@ func NewCmdRun(streams genericclioptions.IOStreams) *cobra.Command {
 
 func addRunFlags(cmd *cobra.Command, opt *RunOptions) {
 	cmd.Flags().StringVar(&opt.Backend, "backend", "", "The backend url for smarttune, such as '127.0.0.1:5000'")
-	cmd.Flags().Int32Var(&opt.MaxIter, "max_iter", 1, "The max iteration for algorithm")
+	cmd.Flags().Int32Var(&opt.MaxIter, "max_iter", 10, "The max iteration for algorithm")
 	cmd.Flags().StringVar(&opt.Url, "url", "", "The url for accessing target system")
 	cmd.Flags().StringVar(&opt.Tools, "tools", "tiup", "The tools for updating system's configuration")
 	cmd.Flags().StringVar(&opt.ClusterName, "cluster_name", "debug", "The cluster name for tuning")
@@ -149,7 +149,7 @@ func (o *RunOptions) Loop(iter int) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Fprintf(o.Out, "Recommendation: %v\n", result.Recommendation)
 	d := &driver.TiDBDriver{
 		Tools:       o.Tools,
 		Url:         o.Url,
