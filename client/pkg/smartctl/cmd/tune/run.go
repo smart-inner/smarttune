@@ -84,6 +84,7 @@ func (o *RunOptions) GetResult(maxTimeSec, intervalSec int) (*Result, error) {
 		} else {
 			fmt.Fprintf(o.Out, "Unable to obtain result, status: %s\n", resp.Status)
 		}
+		time.Sleep(time.Second * 5)
 		elapsed += intervalSec
 	}
 	return nil, errors.New("failed to download the nex config")
