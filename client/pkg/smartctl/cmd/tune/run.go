@@ -21,6 +21,7 @@ type RunOptions struct {
 	Url         string
 	Tools       string
 	ClusterName string
+	Components  string
 	SessionName string
 
 	genericclioptions.IOStreams
@@ -58,6 +59,7 @@ func addRunFlags(cmd *cobra.Command, opt *RunOptions) {
 	cmd.Flags().StringVar(&opt.Url, "url", "", "The url for accessing target system")
 	cmd.Flags().StringVar(&opt.Tools, "tools", "tiup", "The tools for updating system's configuration")
 	cmd.Flags().StringVar(&opt.ClusterName, "cluster_name", "debug", "The cluster name for tuning")
+	cmd.Flags().StringVar(&opt.Components, "components", "tikv", "The components for tuning")
 }
 
 func (o *RunOptions) GetResult(maxTimeSec, intervalSec int) (*Result, error) {
@@ -103,8 +105,9 @@ func (o *RunOptions) Loop(iter int) error {
 	if err != nil {
 		return err
 	}
+	fmt.Fprintf(o.Out, beforeMetrics)
 	startTime := time.Now().UnixMilli()
-	time.Sleep(10 * time.Second)
+	time.Sleep(300 * time.Second)
 	endTime := time.Now().UnixMilli()
 
 	fmt.Fprintf(o.Out, "Start the second collection for metrics\n")
@@ -112,6 +115,7 @@ func (o *RunOptions) Loop(iter int) error {
 	if err != nil {
 		return err
 	}
+	fmt.Fprintf(o.Out, afterMetrics)
 	summary := make(map[string]interface{})
 	summary["start_time"] = startTime
 	summary["end_time"] = endTime
@@ -155,6 +159,7 @@ func (o *RunOptions) Loop(iter int) error {
 		Tools:       o.Tools,
 		Url:         o.Url,
 		ClusterName: o.ClusterName,
+		Components:  o.Components,
 	}
 	if err = d.ChangeConf(result.Recommendation); err != nil {
 		return err

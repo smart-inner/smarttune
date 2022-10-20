@@ -76,7 +76,7 @@ func (collector *TiDBCollector) CollectMetrics() (string, error) {
 	defer DB.Close()
 	globalMetrics := make(map[string]string)
 	MetricsSQL := map[string]string{
-		"tidb.tidb_sql": "SELECT sum(value)/7 'value' from METRICS_SCHEMA.tidb_qps where " +
+		"tidb.tidb_qps": "SELECT sum(value)/7 'value' from METRICS_SCHEMA.tidb_qps where " +
 			"result='OK' and time between now()-interval 4 minute and now()-interval 1 minute;",
 		"tidb.tidb_query_duration": "SELECT avg(value) 'value' from METRICS_SCHEMA.tidb_query_duration " +
 			"where quantile=0.99 and time between now()-interval 4 minute and now()-interval 1 minute;",
