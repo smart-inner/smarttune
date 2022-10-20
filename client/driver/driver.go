@@ -18,6 +18,7 @@ type TiDBDriver struct {
 	Tools       string
 	Url         string
 	ClusterName string
+	Components  string
 }
 
 func (driver *TiDBDriver) ChangeConf(knobs map[string]interface{}) error {
@@ -86,7 +87,7 @@ func (driver *TiDBDriver) ChangeConf(knobs map[string]interface{}) error {
 		return err
 	}
 
-	_, err = manager.Reload(deployment.TiUPComponentTypeCluster, driver.ClusterName, []string{}, 0)
+	_, err = manager.Reload(deployment.TiUPComponentTypeCluster, driver.ClusterName, []string{"-R", driver.Components}, 0)
 	if err != nil {
 		return err
 	}
