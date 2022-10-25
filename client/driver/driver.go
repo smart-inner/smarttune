@@ -39,10 +39,11 @@ func (driver *TiDBDriver) ChangeConf(knobs map[string]interface{}) error {
 		case string:
 			cmd = fmt.Sprintf("set @@global.%s=%s", key, value.(string))
 		case float32:
-			cmd = fmt.Sprintf("set @@global.%s=%f", key, value.(float32))
+			cmd = fmt.Sprintf("set @@global.%s=%d", key, int(value.(float32)))
 		case float64:
-			cmd = fmt.Sprintf("set @@global.%s=%f", key, value.(float64))
+			cmd = fmt.Sprintf("set @@global.%s=%d", key, int(value.(float64)))
 		}
+		fmt.Println(cmd)
 		if _, err = DB.Exec(cmd); err != nil {
 			return err
 		}

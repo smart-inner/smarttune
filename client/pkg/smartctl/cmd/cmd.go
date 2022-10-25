@@ -4,6 +4,9 @@ import (
 	"github.com/smart-inner/smarttune/pkg/commands"
 	"github.com/smart-inner/smarttune/pkg/genericclioptions"
 	"github.com/smart-inner/smarttune/pkg/smartctl/cmd/create"
+	"github.com/smart-inner/smarttune/pkg/smartctl/cmd/modify"
+	"github.com/smart-inner/smarttune/pkg/smartctl/cmd/register"
+	"github.com/smart-inner/smarttune/pkg/smartctl/cmd/show"
 	"github.com/smart-inner/smarttune/pkg/smartctl/cmd/tune"
 	"github.com/spf13/cobra"
 	"os"
@@ -47,7 +50,10 @@ Find more information at: https://github.com/smart-inner/smarttune`,
 		{
 			Message: "Init Commands:",
 			Commands: []*cobra.Command{
+				register.NewCmdRegister(o.IOStreams),
 				create.NewCmdCreate(o.IOStreams),
+				modify.NewCmdModify(o.IOStreams),
+				show.NewCmdShow(o.IOStreams),
 			},
 		},
 		{
