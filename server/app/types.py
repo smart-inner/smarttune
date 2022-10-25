@@ -25,9 +25,12 @@ class ResourceType(Enum):
     OTHER = "Other"
 
 class AlgorithmType(Enum):
-    GPB = "Gaussian Process Bandits"
-    DDPG = "Deep Deterministic Policy Gradients"
-    DNN = "Deep Neural Network"
+    GPB = "GPB"
+    DDPG = "DDPG"
+    DNN = "DNN"
+
+    def is_valid(algo):
+        return algo in [AlgorithmType.GPB.value, AlgorithmType.DDPG.value, AlgorithmType.DNN.value]
 
 class MetricType(Enum):
     COUNTER = "COUNTER"
