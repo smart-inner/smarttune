@@ -3,6 +3,7 @@ package collector
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strings"
 )
@@ -10,10 +11,37 @@ import (
 type Collector interface {
 	CollectKnobs() (string, error)
 	CollectMetrics() (string, error)
+	CollectVersion() (string, string, error)
 }
 
 type TiDBCollector struct {
 	Url string
+}
+
+func (collector *TiDBCollector) CollectVersion() (string, string, error) {
+	DB, err := sql.Open("mysql", collector.Url)
+	if err != nil {
+		return "", "", err
+	}
+	defer DB.Close()
+
+	// collect tidb version
+	rows, err := DB.Query("SELECT @@GLOBAL.version;")
+	if err != nil {
+		return "", "", err
+	}
+	var versionInfo []string
+	for rows.Next() {
+		var Version string
+		if err = rows.Scan(&Version); err != nil {
+			return "", "", err
+		}
+		versionInfo = strings.Split(Version, "-")
+		if len(versionInfo) != 3 {
+			return "", "", fmt.Errorf("error: version '%s' is invalid", Version)
+		}
+	}
+	return versionInfo[1], versionInfo[2], nil
 }
 
 func (collector *TiDBCollector) CollectKnobs() (string, error) {
