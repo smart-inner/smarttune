@@ -68,8 +68,7 @@ func (o *RunOptions) GetResult(maxTimeSec, intervalSec int) (*Result, error) {
 
 	for elapsed <= maxTimeSec {
 		request := make(map[string]string)
-		headers := make(map[string]string)
-		resp, err := http.Get(url, request, headers)
+		resp, err := http.Get(url, request)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +106,7 @@ func (o *RunOptions) Loop(iter int) error {
 	}
 	fmt.Fprintf(o.Out, beforeMetrics)
 	startTime := time.Now().UnixMilli()
-	time.Sleep(300 * time.Second)
+	time.Sleep(10 * time.Second)
 	endTime := time.Now().UnixMilli()
 
 	fmt.Fprintf(o.Out, "Start the second collection for metrics\n")
@@ -133,8 +132,7 @@ func (o *RunOptions) Loop(iter int) error {
 	request["metrics_before"] = beforeMetrics
 	request["metrics_after"] = afterMetrics
 	url := fmt.Sprintf("http://%s/api/result/generate/%s", o.Backend, o.SessionName)
-	headers := make(map[string]string)
-	resp, err := http.PostJSON(url, request, headers)
+	resp, err := http.PostJSON(url, request)
 	if err != nil {
 		return err
 	}

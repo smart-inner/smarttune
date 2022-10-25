@@ -4,8 +4,17 @@
   "session": {
     "name": "{{ .SessionName }}",
     "description": "tune tidb cluster",
-    "algorithm": "Gaussian Process Bandits",
+    "algorithm": "{{ .Algorithm }}",
     "target_objective": "{{ .Target }}",
+    "more_is_better": {{ .MoreIsBetter }},
+    "tuning_knobs": {
+      {{ if eq (len .TuningKnobs) 0 }}
+      "global": ["tidb.performance.gogc", "tikv.raft-engine.enable", "tidb_distsql_scan_concurrency"],
+      {{ else }}
+      "global": [{{ range $index, $value := .TuningKnobs}}{{ if eq $index 0}}"{{ $value }}"{{ else }}, "{{ $value }}"{{ end }}{{ end }}],
+      {{ end }}
+      "local": null
+    },
     "hyper_parameters": null
   }
 }
