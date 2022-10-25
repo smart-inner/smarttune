@@ -26,19 +26,12 @@ func CreateWithContent(dir, prefix, suffix string, content []byte) (fileName str
 	if err != nil || ct != len(content) {
 		file.Close()
 		os.Remove(fileName)
-		err = fmt.Errorf("fail to write content to temp file %s, err: %v, length of content: %d, writed: %d", fileName, err, len(content), ct)
+		err = fmt.Errorf("fail to write content to temp file %s, err: %v, "+
+			"length of content: %d, writed: %d", fileName, err, len(content), ct)
 		return "", err
 	}
 	if err := file.Close(); err != nil {
 		panic(fmt.Sprintln("fail to close temp file ", fileName))
 	}
 	return fileName, nil
-}
-
-func ReadFileContent(path string) (content string, err error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return
-	}
-	return string(data), nil
 }

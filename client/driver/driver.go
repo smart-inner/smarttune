@@ -1,12 +1,13 @@
 package driver
 
 import (
+	"bytes"
 	"database/sql"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	tiupSpec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/smart-inner/smarttune/deployment"
 	"gopkg.in/yaml.v2"
+	"html/template"
 	"strings"
 )
 
@@ -28,23 +29,27 @@ func (driver *TiDBDriver) ChangeConf(knobs map[string]interface{}) error {
 		return err
 	}
 	defer DB.Close()
+
 	for key, value := range knobs {
 		if strings.HasPrefix(key, "tidb.") || strings.HasPrefix(key, "tikv.") {
 			continue
 		}
-		var cmd string
-		switch value.(type) {
-		case int:
-			cmd = fmt.Sprintf("set @@global.%s=%d", key, value.(int))
-		case string:
-			cmd = fmt.Sprintf("set @@global.%s=%s", key, value.(string))
-		case float32:
-			cmd = fmt.Sprintf("set @@global.%s=%d", key, int(value.(float32)))
-		case float64:
-			cmd = fmt.Sprintf("set @@global.%s=%d", key, int(value.(float64)))
+		t, err := template.New("cmd").Parse("set @@global.{{ .Key }}={{ .Value }}")
+		if err != nil {
+			return err
 		}
-		fmt.Println(cmd)
-		if _, err = DB.Exec(cmd); err != nil {
+		data := struct {
+			Key   string
+			Value interface{}
+		}{
+			key,
+			value,
+		}
+		cmd := new(bytes.Buffer)
+		if err = t.Execute(cmd, data); err != nil {
+			return err
+		}
+		if _, err = DB.Exec(cmd.String()); err != nil {
 			return err
 		}
 	}

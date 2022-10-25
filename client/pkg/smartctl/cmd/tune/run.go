@@ -1,6 +1,7 @@
 package tune
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,13 +17,15 @@ import (
 )
 
 type RunOptions struct {
-	Backend     string
-	MaxIter     int32
-	Url         string
-	Tools       string
-	ClusterName string
-	Components  string
-	SessionName string
+	Backend         string
+	MaxIter         int32
+	Url             string
+	Tools           string
+	ClusterName     string
+	Components      string
+	ObservationTime time.Duration
+	Workload        string
+	SessionName     string
 
 	genericclioptions.IOStreams
 }
@@ -40,9 +43,10 @@ func NewRunOptions(streams genericclioptions.IOStreams) *RunOptions {
 func NewCmdRun(streams genericclioptions.IOStreams) *cobra.Command {
 	o := NewRunOptions(streams)
 	cmd := &cobra.Command{
-		Use:   "run SESSION_NAME --backend=backend --url=url [--max_iter=max_iter] [--tools=tools]",
-		Short: "Start to tune the specified system",
-		Long:  `Start to tune the specified system based on the created session`,
+		Use: "run SESSION_NAME --backend=backend --url=url " +
+			"[--cluster_name=cluster_name] [--max_iter=max_iter] [--tools=tools]",
+		Short: "Start to tune the system performance",
+		Long:  `Start to tune the system performance based on the created session`,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(o.Run(args))
 		},
@@ -54,12 +58,21 @@ func NewCmdRun(streams genericclioptions.IOStreams) *cobra.Command {
 }
 
 func addRunFlags(cmd *cobra.Command, opt *RunOptions) {
-	cmd.Flags().StringVar(&opt.Backend, "backend", "", "The backend url for smarttune, such as '127.0.0.1:5000'")
-	cmd.Flags().Int32Var(&opt.MaxIter, "max_iter", 10, "The max iteration for algorithm")
-	cmd.Flags().StringVar(&opt.Url, "url", "", "The url for accessing target system")
-	cmd.Flags().StringVar(&opt.Tools, "tools", "tiup", "The tools for updating system's configuration")
-	cmd.Flags().StringVar(&opt.ClusterName, "cluster_name", "debug", "The cluster name for tuning")
-	cmd.Flags().StringVar(&opt.Components, "components", "tikv", "The components for tuning")
+	cmd.Flags().StringVar(&opt.Backend, "backend", "",
+		"The backend <ip:port> for smarttune server, such as '127.0.0.1:5000'")
+	cmd.Flags().Int32Var(&opt.MaxIter, "max_iter", 10, "The max iteration for tuning algorithm")
+	cmd.Flags().StringVar(&opt.Url, "url", "", "The url for accessing target system, "+
+		"such as for TiDB, --url='<username>:<password>@tcp(<ip>:<port>)/test'")
+	cmd.Flags().StringVar(&opt.ClusterName, "cluster_name", "", "When tuning the TiDB cluster, "+
+		"you need to specify the cluster name")
+	cmd.Flags().StringVar(&opt.Tools, "tools", "tiup", "When tuning the TiDB cluster, "+
+		"the tools are used to update the cluster configuration")
+	cmd.Flags().StringVar(&opt.Components, "components", "tikv", "The components for tuning, "+
+		"such as for the TiDB cluster, if you need to tune the configuration of the tikv and tidb, 'tidb,tikv' is specified")
+	cmd.Flags().DurationVar(&opt.ObservationTime, "time", 300*time.Second,
+		"Observation time for collecting relevant metrics")
+	cmd.Flags().StringVar(&opt.Workload, "workload", "tpcc", "The workload name for tuning, "+
+		"which user-defined, such as tpcc, sysbench")
 }
 
 func (o *RunOptions) GetResult(maxTimeSec, intervalSec int) (*Result, error) {
@@ -91,6 +104,14 @@ func (o *RunOptions) GetResult(maxTimeSec, intervalSec int) (*Result, error) {
 	return nil, errors.New("failed to download the nex config")
 }
 
+func (o *RunOptions) GenerateResult(url string, request map[string]interface{}) (string, error) {
+	resp, err := http.PostJSON(url, request)
+	if err != nil {
+		return "", err
+	}
+	return http.HandleResponse(resp)
+}
+
 func (o *RunOptions) Loop(iter int) error {
 	c := &collector.TiDBCollector{Url: o.Url}
 	fmt.Fprintf(o.Out, "Start to collect knobs\n")
@@ -104,61 +125,69 @@ func (o *RunOptions) Loop(iter int) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(o.Out, beforeMetrics)
 	startTime := time.Now().UnixMilli()
-	time.Sleep(10 * time.Second)
+	time.Sleep(o.ObservationTime)
 	endTime := time.Now().UnixMilli()
-
 	fmt.Fprintf(o.Out, "Start the second collection for metrics\n")
 	afterMetrics, err := c.CollectMetrics()
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(o.Out, afterMetrics)
+
+	systemType, version, err := c.CollectVersion()
+	if err != nil {
+		return err
+	}
 	summary := make(map[string]interface{})
 	summary["start_time"] = startTime
 	summary["end_time"] = endTime
-	summary["observation_time"] = 10
-	summary["system_type"] = "TiDB"
-	summary["version"] = "v6.1.0"
-	summary["workload"] = "tpcc"
+	summary["observation_time"] = o.ObservationTime / time.Second
+	summary["system_type"] = systemType
+	summary["version"] = version
+	summary["workload"] = o.Workload
 	summaryStr, err := json.Marshal(summary)
 	if err != nil {
 		return err
 	}
+
+	// generate the next recommendation configuration
 	request := make(map[string]interface{})
 	request["summary"] = string(summaryStr)
 	request["knobs"] = knobs
 	request["metrics_before"] = beforeMetrics
 	request["metrics_after"] = afterMetrics
 	url := fmt.Sprintf("http://%s/api/result/generate/%s", o.Backend, o.SessionName)
-	resp, err := http.PostJSON(url, request)
+	resp, err := o.GenerateResult(url, request)
 	if err != nil {
 		return err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	var build strings.Builder
-	build.WriteString(string(body))
-	build.WriteString("\n")
-	if resp.StatusCode != 200 {
-		fmt.Fprintf(o.ErrOut, build.String())
-	}
-	fmt.Fprintf(o.Out, build.String())
+	fmt.Fprintf(o.Out, resp)
 
 	result, err := o.GetResult(180, 5)
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(o.Out, "Recommendation: %v\n", result.Recommendation)
+	recommendation, err := json.Marshal(result.Recommendation)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(o.Out, "Recommend the next configuration:\n")
+	var out bytes.Buffer
+	if err = json.Indent(&out, recommendation, "", "    "); err != nil {
+		return err
+	}
+	if _, err = out.WriteTo(o.Out); err != nil {
+		return err
+	}
+
+	// change the system configuration
 	d := &driver.TiDBDriver{
 		Tools:       o.Tools,
 		Url:         o.Url,
 		ClusterName: o.ClusterName,
 		Components:  o.Components,
 	}
+	fmt.Fprintf(o.Out, "Start to change config")
 	if err = d.ChangeConf(result.Recommendation); err != nil {
 		return err
 	}
