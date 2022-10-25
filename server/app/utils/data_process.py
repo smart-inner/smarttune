@@ -16,6 +16,7 @@ class DataProcess(object):
         knob_infos = []
         for knob in knobs:
             knob_info = {}
+            knob_info['id'] = knob.id
             knob_info['name'] = knob.name
             knob_info['var_type'] = knob.var_type
             knob_info['enum_vals'] = knob.enum_vals

@@ -17,12 +17,9 @@ def create_app(config_obj):
     executor.init_app(app)
     scheduler.init_app(app)
     scheduler.start()
-    app.register_blueprint(account, url_prefix='/api/account')
     app.register_blueprint(session, url_prefix='/api/session')
     app.register_blueprint(result, url_prefix='/api/result')
     app.register_blueprint(system, url_prefix='/api/system')
-    app.register_blueprint(knob, url_prefix='/api/knob')
-    app.register_blueprint(metric, url_prefix='/api/metric')
     with app.app_context():
         db.create_all()
     return app

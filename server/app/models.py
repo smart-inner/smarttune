@@ -3,14 +3,6 @@ from app.types import AlgorithmType
 from datetime import datetime
 from .commons import *
 
-
-class User(db.Model):
-    __tablename__ = "user"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    password = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(64), nullable=False)
-
 class SystemCatalog(db.Model):
     __tablename__ = "system_catalog"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -57,21 +49,12 @@ class Session(db.Model):
     more_is_better = db.Column(db.Boolean, default=True)
     hyper_parameters = db.Column(db.Text, default=DEFAULT_HYPER_PARAMETERS)
     system_id = db.Column(db.Integer, db.ForeignKey("system_catalog.id"))
-    #user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
 class SessionKnob(db.Model):
     __tablename__ = "session_knob"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     session_id = db.Column(db.Integer, db.ForeignKey("session.id"))
     knob_id = db.Column(db.Integer, db.ForeignKey("knob_catalog.id"))
-    
-class Workflow(db.Model):
-    __tablename__ = "workflow"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(128), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
-    end_time = db.Column(db.DateTime, nullable=False)
-
 
 class Result(db.Model):
     __tablename__ = "result"
@@ -85,7 +68,6 @@ class Result(db.Model):
     next_configuration = db.Column(db.Text, nullable=True)
     session_id = db.Column(db.Integer, db.ForeignKey("session.id"))
     workload_id = db.Column(db.Integer, db.ForeignKey("workload.id"))
-    #workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"))
 
 class Workload(db.Model):
     __tablename__ = "workload"
