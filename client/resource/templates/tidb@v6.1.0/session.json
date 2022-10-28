@@ -9,7 +9,16 @@
     "more_is_better": {{ .MoreIsBetter }},
     "tuning_knobs": {
       {{ if eq (len .TuningKnobs) 0 }}
-      "global": ["tidb.performance.gogc", "tikv.raft-engine.enable", "tidb_distsql_scan_concurrency"],
+      "global": ["tikv.storage.block-cache.shared", "tikv.server.grpc-raft-conn-num", "tikv.server.grpc-concurrency",
+"tikv.rocksdb.max-sub-compactions", "tikv.rocksdb.max-background-jobs", "tikv.readpool.unified.max-thread-count",
+"tikv.readpool.unified.min-thread-count", "tikv.raftdb.max-sub-compactions", "tikv.raftdb.max-background-jobs",
+"tikv.storage.scheduler-worker-pool-size", "tikv.raftstore.store-max-batch-size", "tikv.raftstore.local-read-batch-size",
+"tikv.raftstore.apply-max-batch-size", "tikv.raftstore.apply-pool-size", "tikv.raftstore.store-pool-size",
+"tikv.raftstore.store-io-pool-size", "tikv.raft-engine.enable", "tidb.tikv-client.copr-cache.capacity-mb",
+"tidb.tikv-client.grpc-connection-count", "tidb.performance.distinct-agg-push-down", "tidb.performance.gogc",
+"tidb.token-limit", "tidb_committer_concurrency", "tidb_prepared_plan_cache_size", "tidb_enable_prepared_plan_cache",
+"tidb_build_stats_concurrency", "tidb_index_serial_scan_concurrency", "tidb_enable_clustered_index",
+"tidb_guarantee_linearizability", "tidb_executor_concurrency", "tidb_distsql_scan_concurrency"],
       {{ else }}
       "global": [{{ range $index, $value := .TuningKnobs}}{{ if eq $index 0}}"{{ $value }}"{{ else }}, "{{ $value }}"{{ end }}{{ end }}],
       {{ end }}
