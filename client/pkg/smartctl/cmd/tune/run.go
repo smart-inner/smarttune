@@ -187,7 +187,7 @@ func (o *RunOptions) Loop(iter int) error {
 		ClusterName: o.ClusterName,
 		Components:  o.Components,
 	}
-	fmt.Fprintf(o.Out, "Start to change config")
+	fmt.Fprintf(o.Out, "\nStart to change config\n")
 	if err = d.ChangeConf(result.Recommendation); err != nil {
 		return err
 	}
