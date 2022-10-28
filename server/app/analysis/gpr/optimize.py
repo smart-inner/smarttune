@@ -19,7 +19,7 @@ class GPRGDResult():
 
 
 def tf_optimize(model, Xnew_arr, learning_rate=0.01, maxiter=100, ucb_beta=3.,
-                active_dims=None, bounds=None):
+                active_dims=None, bounds=None, debug=True):
     Xnew_arr = check_array(Xnew_arr, copy=False, warn_on_dtype=True, dtype=FLOAT_DTYPES)
 
     Xnew = tf.Variable(Xnew_arr, name='Xnew', dtype=settings.float_type)
@@ -68,4 +68,8 @@ def tf_optimize(model, Xnew_arr, learning_rate=0.01, maxiter=100, ucb_beta=3.,
         assert_all_finite(y_mean_value)
         assert_all_finite(y_std_value)
         assert_all_finite(loss_value)
+        if debug:
+            LOG.info("kernel variance: %f", session.run(kvar))
+            LOG.info("kernel lengthscale: %f", session.run(kls))
+            LOG.info("likelihood variance: %f", session.run(lvar))
         return GPRGDResult(y_mean_value, y_std_value, loss_value, Xnew_value)

@@ -11,7 +11,7 @@ DEFAULT_CONVERSION = '''{
             "MiB": "1024 ** 2",
             "KiB": "1024 ** 1"
         },
-        "MIN_BYTES_UNIT": "KB",
+        "MIN_BYTES_UNIT": "KiB",
         "TIME_SYSTEM": {
             "d": "1000 * 60 * 60 * 24",
             "h": "1000 * 60 * 60",
