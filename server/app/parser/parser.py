@@ -109,7 +109,10 @@ class Parser:
         return int_value
 
     def format_real(self, real_value):
-        return round(float(real_value), 3)
+        value = round(float(real_value), 3)
+        if value % 1.0 == 0.0:
+            return value + 0.001
+        return value
 
     def format_string(self, string_value):
         return string_value
