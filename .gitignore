@@ -2,3 +2,7 @@
 bin
 __pycache__
 *.pprof
+*.egg-info
+*.whl
+build
+dist
