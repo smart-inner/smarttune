@@ -3,7 +3,7 @@ SmartTune is a black-box optimization that can automatically find good performan
 It consists of two parts: client and server. When deploying the system, which makes it easier for users to find better performance settings.
 Many complex systems have hundreds or even thousands of configuration knobs, Manual tuning can be time-consuming and expertise dependent.
 SmartTune can quickly find better settings by using AI methods without manual intervention. So far, SmartTune supports configuration tuning of
-TiDB@v6.1.0.
+TiDB@v6.1.0, and it's very easy to extend to other complex systems.
 
 # Quick start
 If you want to quick start, try the following commands, enjoy it!
@@ -45,7 +45,43 @@ The contents of config.json are as follows:
 The 'db_url' specifies the url of mysql to store metadata.
 
 ### Start client
+Client can be complied and used on Linux, CentOS and OSX. Golang(>=1.18.0) is requirement, It is as simple as:
+```shell
+$ cd client
+$ make
+start to build smartctl
+GO111MODULE=on go build  -tags codes -o ./bin/smartctl cmd/smartctl/*.go
+build smartctl successfully
+```
+An example of tuning TiDB@v6.1.0 is as follows:
+```shell
+$ ./bin/smartctl register tidb@v6.1.0 --backend=172.16.7.68:5000
+Success to register TiDB@v6.1.0
 
+$ ./bin/smartctl create tidb-tuning --backend=172.16.7.68:5000
+Success to create session 'tidb-tuning' for TiDB@v6.1.0
+
+$ ./bin/smartctl run tidb-tuning --backend=172.16.7.68:5000 --url="root:@tcp(172.16.7.68:3390)/test" --cluster_name=debug
+The 1-th Loop Starts / Total Loops 10
+Start to collect knobs
+Start the first collection for metrics
+Start the second collection for metrics
+Result stored successfully! Running tunner with result id: 1
+Recommend the next configuration:
+{
+    "tidb.performance.distinct-agg-push-down": true,
+    "tidb.performance.gogc": 171,
+    "tidb.tikv-client.copr-cache.capacity-mb": 2111.314,
+    "tidb.tikv-client.grpc-connection-count": 13,
+    "tidb.token-limit": 3416,
+    "tidb_build_stats_concurrency": 140,
+    "tidb_committer_concurrency": 991,
+    "tidb_distsql_scan_concurrency": 166,
+...
+```
+It's very easy to tune TiDB@v6.1.0 based on Client.
 # Architecture
+![architecture](./docs/architecture.png)
 
 # License
+SmartTune is under the Apache 2.0 license. See the [LICENSE](./LICENSE) file for details.
