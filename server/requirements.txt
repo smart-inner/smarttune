@@ -1,3 +1,10 @@
-flask==2.2.2
+flask==2.0.3
 flask-sqlalchemy==2.5.1
-prefect==2.3.2
+flask-executor==1.0.0
+flask-apscheduler==1.12.4
+gpflow==1.5.0
+numpy==1.15.4
+scipy==1.0.0
+tensorflow==1.12.2
+loguru==0.6.0
+scikit-learn==0.19.1
