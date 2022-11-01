@@ -133,7 +133,8 @@ func (o *RunOptions) Loop(iter int) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Fprintf(o.Out, afterMetrics)
+	fmt.Fprintf(o.Out, "\n")
 	systemType, version, err := c.CollectVersion()
 	if err != nil {
 		return err
