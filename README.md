@@ -80,6 +80,15 @@ Recommend the next configuration:
 ...
 ```
 It's very easy to tune TiDB@v6.1.0 based on Client.
+# Evaluation
+Deploy the TiDB cluster locally and tune the TPCC workload. Compared with the default knobs, the tuning knobs increase
+QPS by **23.7%(1786->2210)** and reduce latency by **20.9%(26.3ms->20.8ms)**. The experimental results are as follows：
+<figure class="half">
+    <img src="./docs/default.png" width="485">
+    <img src="./docs/tuning.png" width="485">
+</figure>
+The left figure shows the default knobs, and the right figure shows the tuning knobs.
+
 # Architecture
 ![architecture](./docs/architecture.png)
 
