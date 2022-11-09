@@ -1,10 +1,7 @@
 import gc
 import numpy as np
 import tensorflow as tf
-
-from .util import get_analysis_logger
-
-LOG = get_analysis_logger(__name__)
+from loguru import logger
 
 
 class GPRResult(object):
@@ -409,8 +406,6 @@ class GPRGD(GPR):
                 tf.transpose(K2__), tf.matmul(self.K_inv, K2__)))), tf.float32)
             if self.check_numerics is True:
                 sig_val = tf.check_numerics(sig_val, message="sigma: ")
-            LOG.debug("\nyhat_gd : %s", str(sess.run(yhat_gd)))
-            LOG.debug("\nsig_val : %s", str(sess.run(sig_val)))
 
             loss = tf.squeeze(tf.subtract(self.mu_multiplier * yhat_gd,
                                           self.sigma_multiplier * sig_val))
@@ -474,7 +469,7 @@ class GPRGD(GPR):
                 minl_conf = np.empty((batch_len, nfeats))
                 for i in range(batch_len):
                     if self.debug is True:
-                        LOG.info("-------------------------------------------")
+                        logger.info("-------------------------------------------")
                     yhats_it = np.empty((self.max_iter + 1,)) * np.nan
                     sigmas_it = np.empty((self.max_iter + 1,)) * np.nan
                     losses_it = np.empty((self.max_iter + 1,)) * np.nan
@@ -484,16 +479,16 @@ class GPRGD(GPR):
                     step = 0
                     for step in range(self.max_iter):
                         if self.debug is True:
-                            LOG.info("Batch %d, iter %d:", i, step)
+                            logger.info("Batch %d, iter %d:" % (i, step))
                         yhats_it[step] = sess.run(yhat_gd)[0][0]
                         sigmas_it[step] = sess.run(sig_val)[0][0]
                         losses_it[step] = sess.run(loss)
                         confs_it[step] = sess.run(xt_)
                         if self.debug is True:
-                            LOG.info("    yhat:  %s", str(yhats_it[step]))
-                            LOG.info("    sigma: %s", str(sigmas_it[step]))
-                            LOG.info("    loss:  %s", str(losses_it[step]))
-                            LOG.info("    conf:  %s", str(confs_it[step]))
+                            logger.info("    yhat:  %s" % str(yhats_it[step]))
+                            logger.info("    sigma: %s" % str(sigmas_it[step]))
+                            logger.info("    loss:  %s" % str(losses_it[step]))
+                            logger.info("    conf:  %s" % str(confs_it[step]))
                         sess.run(train)
                         # constraint Projected Gradient Descent
                         xt = sess.run(xt_)
@@ -665,9 +660,6 @@ def euclidean_mat(X, y, sess):
 
 
 def gd_tf(xs, ys, xt, ridge, length_scale=1.0, magnitude=1.0, max_iter=50):
-    LOG.debug("xs shape: %s", str(xs.shape))
-    LOG.debug("ys shape: %s", str(ys.shape))
-    LOG.debug("xt shape: %s", str(xt.shape))
     with tf.Graph().as_default():
         # y_best = tf.cast(tf.reduce_min(ys,0,True),tf.float32);   #array
         # yhat_gd = tf.check_numerics(yhat_gd, message="yhat: ")
@@ -701,7 +693,6 @@ def gd_tf(xs, ys, xt, ridge, length_scale=1.0, magnitude=1.0, max_iter=50):
 
         tmp = tf.cast(tmp, tf.float32)
         K = magnitude * tf.exp(-tmp / length_scale) + tf.diag(ridge)
-        LOG.debug("K shape: %s", str(sess.run(K).shape))
 
         K2_mat = tf.sqrt(tf.reduce_sum(tf.pow(tf.subtract(xt_, xs), 2), 1))
         K2_mat = tf.transpose(tf.expand_dims(K2_mat, 0))
@@ -713,14 +704,11 @@ def gd_tf(xs, ys, xt, ridge, length_scale=1.0, magnitude=1.0, max_iter=50):
         sig_val = tf.cast((tf.sqrt(magnitude - tf.matmul(
             tf.transpose(K2), tf.matmul(tf.matrix_inverse(K), K2)))), tf.float32)
 
-        LOG.debug('yhat shape: %s', str(sess.run(yhat_).shape))
-        LOG.debug('sig_val shape: %s', str(sess.run(sig_val).shape))
         yhat_ = tf.check_numerics(yhat_, message='yhat: ')
         sig_val = tf.check_numerics(sig_val, message='sig_val: ')
         loss = tf.squeeze(tf.subtract(yhat_, sig_val))
         loss = tf.check_numerics(loss, message='loss: ')
     #    optimizer = tf.train.GradientDescentOptimizer(0.1)
-        LOG.debug('loss: %s', str(sess.run(loss)))
         optimizer = tf.train.AdamOptimizer(0.1)
         train = optimizer.minimize(loss)
         init = tf.global_variables_initializer()
@@ -730,7 +718,6 @@ def gd_tf(xs, ys, xt, ridge, length_scale=1.0, magnitude=1.0, max_iter=50):
             assign_op = xt_.assign(xt[i])
             sess.run(assign_op)
             for step in range(max_iter):
-                LOG.debug('sample #: %d, iter #: %d, loss: %s', i, step, str(sess.run(loss)))
                 sess.run(train)
             yhats[i] = sess.run(yhat_)[0][0]
             sigmas[i] = sess.run(sig_val)[0][0]

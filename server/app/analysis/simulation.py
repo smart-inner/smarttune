@@ -11,7 +11,7 @@ import tensorflow as tf
 import gpflow
 import torch
 sys.path.append("../")
-from analysis.util import get_analysis_logger, TimerStruct  # noqa
+from analysis.util import TimerStruct  # noqa
 from analysis.ddpg.ddpg import DDPG  # noqa
 from analysis.ddpg.ou_process import OUProcess  # noqa
 from analysis.gp_tf import GPRGD  # noqa
@@ -19,9 +19,7 @@ from analysis.nn_tf import NeuralNet  # noqa
 from analysis.gpr import gpr_models  # noqa
 from analysis.gpr import ucb  # noqa
 from analysis.gpr.optimize import tf_optimize  # noqa
-
-
-LOG = get_analysis_logger(__name__)
+from loguru import logger
 
 
 class Environment(object):
@@ -128,7 +126,7 @@ def ddpg(env, config, n_loops=100):
             model_ddpg.update()
         results.append(reward)
         x_axis.append(i+1)
-        LOG.info('loop: %d reward: %f', i, reward[0])
+        logger.info('loop: %d reward: %f' % (i, reward[0]))
         knob_data = model_ddpg.choose_action(metric_data)
     return np.array(results), np.array(x_axis)
 
@@ -192,7 +190,7 @@ def dnn(env, config, n_loops=100):
             best_config = best_config.clip(0, 1)
         reward, _ = env.simulate(best_config)
         memory.push(best_config, reward)
-        LOG.info('loop: %d reward: %f', i, reward[0])
+        logger.info('loop: %d reward: %f' % (i, reward[0]))
         results.append(reward)
         x_axis.append(i+1)
     return np.array(results), np.array(x_axis)
@@ -242,7 +240,7 @@ def gpr(env, config, n_loops=100):
         best_config = res.minl_conf[best_config_idx, :]
         reward, _ = env.simulate(best_config)
         memory.push(best_config, reward)
-        LOG.info('loop: %d reward: %f', i, reward[0])
+        logger.info('loop: %d reward: %f' % (i, reward[0]))
         results.append(reward)
         x_axis.append(i+1)
     return np.array(results), np.array(x_axis)
@@ -259,7 +257,7 @@ def run_optimize(X, y, X_samples, model_name, opt_kwargs, model_kwargs):
     m = gpr_models.create_model(model_name, X=X, y=y, **model_kwargs)
     timer.stop()
     model_creation_sec = timer.elapsed_seconds
-    LOG.info(m.model.as_pandas_table())
+    logger.info(m.model.as_pandas_table())
 
     # Optimize the system's configuration knobs
     timer.start()
@@ -332,7 +330,7 @@ def gpr_new(env, config, n_loops=100):
         action = X_new[0]
         reward, _ = env.simulate(action)
         memory.push(action, reward)
-        LOG.info('loop: %d reward: %f', i, reward[0])
+        logger.info('loop: %d reward: %f' % (i, reward[0]))
         results.append(reward)
         x_axis.append(i+1)
 
@@ -361,7 +359,7 @@ def plotlines(xs, results, labels, title, path):
 
 def run(tuners, configs, labels, title, env, n_loops, n_repeats):
     if not plt:
-        LOG.info("Cannot import matplotlib. Will write results to files instead of figures.")
+        logger.info("Cannot import matplotlib. Will write results to files instead of figures.")
     random.seed(1)
     np.random.seed(1)
     torch.manual_seed(0)

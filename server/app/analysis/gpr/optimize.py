@@ -3,11 +3,7 @@ import tensorflow as tf
 from gpflow import settings
 from sklearn.utils import assert_all_finite, check_array
 from sklearn.utils.validation import FLOAT_DTYPES
-
-from app.analysis.util import get_analysis_logger
-
-LOG = get_analysis_logger(__name__)
-
+from loguru import logger
 
 class GPRGDResult():
 
@@ -69,7 +65,7 @@ def tf_optimize(model, Xnew_arr, learning_rate=0.01, maxiter=100, ucb_beta=3.,
         assert_all_finite(y_std_value)
         assert_all_finite(loss_value)
         if debug:
-            LOG.info("kernel variance: %f", session.run(kvar))
-            LOG.info("kernel lengthscale: %f", session.run(kls))
-            LOG.info("likelihood variance: %f", session.run(lvar))
+            logger.info("kernel variance: %f" % session.run(kvar))
+            logger.info("kernel lengthscale: %f" % session.run(kls))
+            logger.info("likelihood variance: %f" % session.run(lvar))
         return GPRGDResult(y_mean_value, y_std_value, loss_value, Xnew_value)
