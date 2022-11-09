@@ -83,7 +83,7 @@ It's very easy to tune TiDB@v6.1.0 based on Client.
 # Evaluation
 Deploy the TiDB cluster locally and tune the TPCC workload online. Compared with the default knobs, the tuning knobs increase
 QPS by **41.9%(1753->2487)** and reduce latency by **27.4%(25.9ms->18.8ms)**. The experimental results of online tuning are as follows：
-![tuning](./docs/tuning.png)
+![qps](./docs/qps.png)
 The latency of each stage in the 10 iterations of the tuning algorithm is as follows:
 ![latency](./docs/latency.png)
 With the iteration of online tuning, the latency of each stage is significantly reduced.
