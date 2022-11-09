@@ -2,10 +2,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-
-from .util import get_analysis_logger
-
-LOG = get_analysis_logger(__name__)
+from loguru import logger
 
 
 class NeuralNetResult(object):
@@ -71,9 +68,9 @@ class NeuralNet(object):
                 with self.session.as_default():  # pylint: disable=not-context-manager
                     self.model.load_weights(weights_file)
             if self.debug:
-                LOG.info('Neural Network Model weights file exists, load weights from the file')
+                logger.info('Neural Network Model weights file exists, load weights from the file')
         except Exception:  # pylint: disable=broad-except
-            LOG.info('Weights file does not match neural network model, train model from scratch')
+            logger.info('Weights file does not match neural network model, train model from scratch')
 
     def get_weights_bin(self):
         with self.graph.as_default():
@@ -87,9 +84,9 @@ class NeuralNet(object):
                 with self.session.as_default():  # pylint: disable=not-context-manager
                     self.model.set_weights(pickle.loads(weights))
             if self.debug:
-                LOG.info('Neural Network Model weights exists, load the existing weights')
+                logger.info('Neural Network Model weights exists, load the existing weights')
         except Exception:  # pylint: disable=broad-except
-            LOG.info('Weights does not match neural network model, train model from scratch')
+            logger.info('Weights does not match neural network model, train model from scratch')
 
     # Build same neural network as self.model, But input X is variables,
     # weights are placedholders. Find optimial X using gradient descent.
@@ -139,11 +136,9 @@ class NeuralNet(object):
                     i = 0
                     size = len(mse)
                     while(i < size):
-                        LOG.info("Neural network training phase, epoch %d: mean_squared_error %f",
-                                 i, mse[i])
+                        logger.info("Neural network training phase, epoch %d: mean_squared_error %f" % (i, mse[i]))
                         i += self.debug_interval
-                    LOG.info("Neural network training phase, epoch %d: mean_squared_error %f",
-                             size - 1, mse[size - 1])
+                    logger.info("Neural network training phase, epoch %d: mean_squared_error %f" % (size - 1, mse[size - 1]))
 
     def predict(self, X_pred):
         with self.graph.as_default():
@@ -189,8 +184,8 @@ class NeuralNet(object):
 
                 y_predict = self.predict(X_start)
                 if self.debug:
-                    LOG.info("Recommend phase, y prediction: min %f, max %f, mean %f",
-                             np.min(y_predict), np.max(y_predict), np.mean(y_predict))
+                    logger.info("Recommend phase, y prediction: min %f, max %f, mean %f" % \
+                                (np.min(y_predict), np.max(y_predict), np.mean(y_predict)))
 
                 init = tf.global_variables_initializer()
                 sess.run(init)
@@ -203,8 +198,8 @@ class NeuralNet(object):
                                                self.vars['X_max_']: X_max,
                                                self.vars['X_min_']: X_min})
                 if self.debug:
-                    LOG.info("Recommend phase, y before gradient descent: min %f, max %f, mean %f",
-                             np.min(y_before), np.max(y_before), np.mean(y_before))
+                    logger.info("Recommend phase, y before gradient descent: min %f, max %f, mean %f" % \
+                                (np.min(y_before), np.max(y_before), np.mean(y_before)))
 
                 for i in range(recommend_epochs):
                     sess.run(self.ops['train_'],
@@ -220,8 +215,8 @@ class NeuralNet(object):
                                                       self.vars['b2_']: b2, self.vars['b3_']: b3,
                                                       self.vars['X_max_']: X_max,
                                                       self.vars['X_min_']: X_min})
-                        LOG.info("Recommend phase, epoch %d, y: min %f, max %f, mean %f",
-                                 i, np.min(y_train), np.max(y_train), np.mean(y_train))
+                        logger.info("Recommend phase, epoch %d, y: min %f, max %f, mean %f" % \
+                                    (i, np.min(y_train), np.max(y_train), np.mean(y_train)))
 
                 y_recommend = sess.run(self.vars['y_'],
                                        feed_dict={self.vars['w1_']: w1, self.vars['w2_']: w2,
@@ -235,9 +230,9 @@ class NeuralNet(object):
                 res = NeuralNetResult(minl=y_recommend, minl_conf=X_recommend)
 
                 if self.debug:
-                    LOG.info("Recommend phase, epoch %d, y after gradient descent: \
-                             min %f, max %f, mean %f", recommend_epochs, np.min(y_recommend),
-                             np.max(y_recommend), np.mean(y_recommend))
+                    logger.info("Recommend phase, epoch %d, y after gradient descent: \
+                                min %f, max %f, mean %f" % (recommend_epochs, np.min(y_recommend),
+                                np.max(y_recommend), np.mean(y_recommend)))
 
                 self.recommend_iters += 1
                 return res

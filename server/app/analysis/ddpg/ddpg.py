@@ -6,10 +6,6 @@ from torch.autograd import Variable
 
 from analysis.ddpg.ou_process import OUProcess
 from analysis.ddpg.prioritized_replay_memory import PrioritizedReplayMemory
-from analysis.util import get_analysis_logger
-
-LOG = get_analysis_logger(__name__)
-
 
 class Actor(nn.Module):
 
