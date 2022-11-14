@@ -2,6 +2,7 @@ import numpy as np
 from .validation import check_array, check_sample_weight, \
     check_is_fitted, _check_y, check_X_y, _get_feature_names, \
         _num_features
+from .util import _labels
 import warnings
 
 class DensityCluster:
@@ -24,7 +25,7 @@ class DensityCluster:
            [ 1.,  2.]])
     """
 
-    def __init__(self, percent=2.0, kernel='gaussian'):
+    def __init__(self, percent=2.0, kernel='gaussian', min_cluster_centers=1, max_cluster_centers=10):
         """
         Constructor
 
@@ -36,12 +37,15 @@ class DensityCluster:
         kernel: kernel for calculating local density, the optional 
             values are 'gaussian' or 'cut-off'.
         """
-        self.percent = percent
-        self.kernel = kernel
+        self.percent_ = percent
+        self.kernel_ = kernel
+        self.min_cluster_centers_ = min_cluster_centers
+        self.max_cluster_centers_ = max_cluster_centers
 
 
     def fit(self, X, y=None, sample_weight=None):
         self.labels_ = np.array([0]*399)
+        self.cluster_centers_ = np.array([[0, 1, 0], [10, 2, 2], [1, 3, 1]], dtype=float)
         return self
 
 
@@ -70,7 +74,9 @@ class DensityCluster:
 
         X = self._check_test_data(X)
         sample_weight = check_sample_weight(sample_weight, X, dtype=X.dtype)
-        return
+        labels = _labels(X, sample_weight, self.cluster_centers_, return_inertia=False)
+
+        return labels
 
 
     def fit_predict(self, X, y=None, sample_weight=None):
