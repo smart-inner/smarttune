@@ -5,7 +5,7 @@ from .config import get_config
 class _ArrayAPIWrapper:
     """
     specific Array API compatibility wrapper
-    This wrapper makes it possible for scikit-learn maintainers to
+    This wrapper makes it possible for maintainers to
     deal with discrepancies between different implementations of the
     Python array API standard and its evolution over time.
     The Python array API standard specification:
@@ -28,7 +28,6 @@ class _ArrayAPIWrapper:
             return self._namespace.asarray(X_np)
 
         # We only support axis in (0, 1) and ndim in (1, 2) because that is all we need
-        # in scikit-learn
         if axis not in {0, 1}:
             raise ValueError(f"Only axis in (0, 1) is supported. Got {axis}")
 
@@ -49,8 +48,7 @@ class _NumPyApiWrapper:
     """Array API compat wrapper for any numpy version
     NumPy < 1.22 does not expose the numpy.array_api namespace. This
     wrapper makes it possible to write code that uses the standard
-    Array API while working with any version of NumPy supported by
-    scikit-learn.
+    Array API while working with any version of NumPy.
     See the `get_namespace()` public function for more details.
     """
 
@@ -150,7 +148,7 @@ def _expit(X):
 def _asarray_with_order(array, dtype=None, order=None, copy=None, xp=None):
     """Helper to support the order kwarg only for NumPy-backed arrays
     Memory layout parameter `order` is not exposed in the Array API standard,
-    however some input validation code in scikit-learn needs to work both
+    however some input validation code needs to work both
     for classes and functions that will leverage Array API only operations
     and for code that inherently relies on NumPy backed data containers with
     specific memory layout constraints (e.g. our own Cython code). The

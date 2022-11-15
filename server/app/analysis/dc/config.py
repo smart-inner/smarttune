@@ -35,8 +35,8 @@ def get_config():
         Keys are parameter names that can be passed to :func:`set_config`.
     See Also
     --------
-    config_context : Context manager for global scikit-learn configuration.
-    set_config : Set global scikit-learn configuration.
+    config_context : Context manager for global configuration.
+    set_config : Set global configuration.
     """
     # Return a copy of the threadlocal configuration so that users will
     # not be able to modify the configuration with the returned dict.
@@ -53,7 +53,7 @@ def set_config(
     array_api_dispatch=None,
     transform_output=None,
 ):
-    """Set global scikit-learn configuration
+    """Set global configuration
     .. versionadded:: 0.19
     Parameters
     ----------
@@ -64,7 +64,7 @@ def set_config(
         avoiding error.  Global default: False.
         .. versionadded:: 0.19
     working_memory : int, default=None
-        If set, scikit-learn will attempt to limit the size of temporary arrays
+        If set, it will attempt to limit the size of temporary arrays
         to this number of MiB (per job when parallelised), often saving both
         computation time and memory on expensive operations that can be
         performed in chunks. Global default: 1024.
@@ -85,14 +85,14 @@ def set_config(
         The number of row vectors per chunk for the accelerated pairwise-
         distances reduction backend. Default is 256 (suitable for most of
         modern laptops' caches and architectures).
-        Intended for easier benchmarking and testing of scikit-learn internals.
+        Intended for easier benchmarking and testing.
         End users are not expected to benefit from customizing this configuration
         setting.
         .. versionadded:: 1.1
     enable_cython_pairwise_dist : bool, default=None
         Use the accelerated pairwise-distances reduction backend when
         possible. Global default: True.
-        Intended for easier benchmarking and testing of scikit-learn internals.
+        Intended for easier benchmarking and testing.
         End users are not expected to benefit from customizing this configuration
         setting.
         .. versionadded:: 1.1
@@ -111,7 +111,7 @@ def set_config(
         .. versionadded:: 1.2
     See Also
     --------
-    config_context : Context manager for global scikit-learn configuration.
+    config_context : Context manager for global configuration.
     get_config : Retrieve current values of the global configuration.
     """
     local_config = _get_threadlocal_config()
@@ -146,7 +146,7 @@ def config_context(
     array_api_dispatch=None,
     transform_output=None,
 ):
-    """Context manager for global scikit-learn configuration.
+    """Context manager for global configuration.
     Parameters
     ----------
     assume_finite : bool, default=None
@@ -156,7 +156,7 @@ def config_context(
         avoiding error. If None, the existing value won't change.
         The default value is False.
     working_memory : int, default=None
-        If set, scikit-learn will attempt to limit the size of temporary arrays
+        If set, it will attempt to limit the size of temporary arrays
         to this number of MiB (per job when parallelised), often saving both
         computation time and memory on expensive operations that can be
         performed in chunks. If None, the existing value won't change.
@@ -180,14 +180,14 @@ def config_context(
         The number of row vectors per chunk for the accelerated pairwise-
         distances reduction backend. Default is 256 (suitable for most of
         modern laptops' caches and architectures).
-        Intended for easier benchmarking and testing of scikit-learn internals.
+        Intended for easier benchmarking and testing.
         End users are not expected to benefit from customizing this configuration
         setting.
         .. versionadded:: 1.1
     enable_cython_pairwise_dist : bool, default=None
         Use the accelerated pairwise-distances reduction backend when
         possible. Global default: True.
-        Intended for easier benchmarking and testing of scikit-learn internals.
+        Intended for easier benchmarking and testing.
         End users are not expected to benefit from customizing this configuration
         setting.
         .. versionadded:: 1.1
@@ -209,7 +209,7 @@ def config_context(
     None.
     See Also
     --------
-    set_config : Set global scikit-learn configuration.
+    set_config : Set global configuration.
     get_config : Retrieve current values of the global configuration.
     Notes
     -----

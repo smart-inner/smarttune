@@ -1,5 +1,5 @@
 import numpy as np
-from app.analysis.dc.density_cluster import DensityCluster
+from app.analysis.dc import DensityCluster
 import matplotlib.pyplot as plt
 
 Compound = './Compound.txt'
