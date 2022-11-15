@@ -1,8 +1,6 @@
 import numpy as np
-from .validation import check_array, check_sample_weight, \
-    check_is_fitted, _check_y, check_X_y, _get_feature_names, \
-        _num_features
-from .util import _labels
+from .validation import *
+from .util import *
 import warnings
 
 class DensityCluster:
@@ -15,7 +13,7 @@ class DensityCluster:
     >>> import numpy as np
     >>> X = np.array([[1, 2], [1, 4], [1, 0],
     ...               [10, 2], [10, 4], [10, 0]])
-    >>> dc = DensityCluster(percent=2.0, kernel='gaussian').fit(X)
+    >>> dc = DensityCluster(percent=2.0).fit(X)
     >>> dc.labels_
     array([1, 1, 1, 0, 0, 0], dtype=int32)
     >>> dc.predict([[0, 0], [12, 3]])
@@ -25,7 +23,7 @@ class DensityCluster:
            [ 1.,  2.]])
     """
 
-    def __init__(self, percent=2.0, kernel='gaussian', min_cluster_centers=1, max_cluster_centers=10):
+    def __init__(self, percent=2.0, min_cluster_centers=2, max_cluster_centers=10):
         """
         Constructor
 
@@ -33,19 +31,43 @@ class DensityCluster:
         ----------
         percent: sort all distances in ascending order, and use 
             'percent' position as dc.
-
-        kernel: kernel for calculating local density, the optional 
-            values are 'gaussian' or 'cut-off'.
         """
         self.percent_ = percent
-        self.kernel_ = kernel
         self.min_cluster_centers_ = min_cluster_centers
         self.max_cluster_centers_ = max_cluster_centers
 
 
     def fit(self, X, y=None, sample_weight=None):
-        self.labels_ = np.array([0]*399)
-        self.cluster_centers_ = np.array([[0, 1, 0], [10, 2, 2], [1, 3, 1]], dtype=float)
+        """Compute density clustering.
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training instances to cluster. It must be noted that the data
+            will be converted to C ordering, which will cause a memory
+            copy if the given data is not C-contiguous.
+            If a sparse matrix is passed, a copy will be made if it's not in
+            CSR format.
+        y : Ignored
+            Not used, present here for API consistency by convention.
+        sample_weight : array-like of shape (n_samples,), default=None
+            The weights for each observation in X. If None, all observations
+            are assigned equal weight.
+            .. versionadded:: 0.20
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
+        X = self._check_test_data(X)
+        sample_weight = check_sample_weight(sample_weight, X, dtype=X.dtype)
+        distance = cal_distance(X, sample_weight)
+        dc = cal_dc(distance, self.percent_)
+        rho = cal_rho(distance, dc)
+        delta = cal_delta(distance, rho)
+        self.cluster_centers_ = cal_cluster_centers(X, sample_weight, rho, delta, 
+            self.min_cluster_centers_, self.max_cluster_centers_)
+        self.labels_ = cal_labels(X, sample_weight, self.cluster_centers_, return_inertia=False)
+
         return self
 
 
@@ -74,7 +96,7 @@ class DensityCluster:
 
         X = self._check_test_data(X)
         sample_weight = check_sample_weight(sample_weight, X, dtype=X.dtype)
-        labels = _labels(X, sample_weight, self.cluster_centers_, return_inertia=False)
+        labels = cal_labels(X, sample_weight, self.cluster_centers_, return_inertia=False)
 
         return labels
 
@@ -188,7 +210,7 @@ class DensityCluster:
             X = check_array(X, input_name="X", **check_params)
             out = X
         elif no_val_X and not no_val_y:
-            y = _check_y(y, **check_params)
+            y = check_y(y, **check_params)
             out = y
         else:
             if validate_separately:
@@ -230,7 +252,7 @@ class DensityCluster:
         """
 
         if reset:
-            feature_names_in = _get_feature_names(X)
+            feature_names_in = get_feature_names(X)
             if feature_names_in is not None:
                 self.feature_names_in_ = feature_names_in
             elif hasattr(self, "feature_names_in_"):
@@ -240,7 +262,7 @@ class DensityCluster:
             return
 
         fitted_feature_names = getattr(self, "feature_names_in_", None)
-        X_feature_names = _get_feature_names(X)
+        X_feature_names = get_feature_names(X)
 
         if fitted_feature_names is None and X_feature_names is None:
             # no feature names seen in fit and in X
@@ -315,7 +337,7 @@ class DensityCluster:
                should set `reset=False`.
         """
         try:
-            n_features = _num_features(X)
+            n_features = num_features(X)
         except TypeError as e:
             if not reset and hasattr(self, "n_features_in_"):
                 raise ValueError(

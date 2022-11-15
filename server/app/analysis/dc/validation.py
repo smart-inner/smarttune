@@ -730,7 +730,7 @@ def check_sample_weight(sample_weight, X, dtype=None, copy=False, only_non_negat
 
     return sample_weight
 
-def _check_y(y, multi_output=False, y_numeric=False, estimator=None):
+def check_y(y, multi_output=False, y_numeric=False, estimator=None):
     """Isolated part of check_X_y dedicated to y validation"""
     if multi_output:
         y = check_array(
@@ -911,7 +911,7 @@ def check_X_y(
         input_name="X",
     )
 
-    y = _check_y(y, multi_output=multi_output, y_numeric=y_numeric, estimator=estimator)
+    y = check_y(y, multi_output=multi_output, y_numeric=y_numeric, estimator=estimator)
 
     check_consistent_length(X, y)
 
@@ -934,7 +934,7 @@ def check_consistent_length(*arrays):
             % [int(l) for l in lengths]
         )
 
-def _get_feature_names(X):
+def get_feature_names(X):
     """Get feature names from X.
     Support for other array containers should place its implementation here.
     Parameters
@@ -972,7 +972,7 @@ def _get_feature_names(X):
     if len(types) == 1 and types[0] == "str":
         return feature_names
 
-def _num_features(X):
+def num_features(X):
     """Return the number of features in an array-like X.
     This helper function tries hard to avoid to materialize an array version
     of X unless necessary. For instance, if X is a list of lists,
