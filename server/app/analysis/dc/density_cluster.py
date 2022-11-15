@@ -63,10 +63,12 @@ class DensityCluster:
         distance = cal_distance(X, sample_weight)
         dc = cal_dc(distance, self.percent_)
         rho = cal_rho(distance, dc)
-        delta = cal_delta(distance, rho)
-        self.cluster_centers_ = cal_cluster_centers(X, sample_weight, rho, delta, 
+        delta, closest_leader = cal_delta(distance, rho)
+        normal_rho = (rho - np.min(rho)) / (np.max(rho) - np.min(rho))
+        normal_delta = (delta - np.min(delta)) / (np.max(delta) - np.min(delta))
+        sigma = np.multiply(normal_rho, normal_delta)
+        self.cluster_centers_, self.labels_ = cal_cluster_centers(X, sample_weight, closest_leader, sigma, 
             self.min_cluster_centers_, self.max_cluster_centers_)
-        self.labels_ = cal_labels(X, sample_weight, self.cluster_centers_, return_inertia=False)
 
         return self
 

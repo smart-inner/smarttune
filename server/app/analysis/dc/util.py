@@ -114,8 +114,11 @@ def cal_delta(distance, rho):
     --------
     delta: ndarray of shape (n_samples, )
         The delta for every point.
+    closest_leader: ndarray of shape (n_samples, )
+        The closest point for every point
     """
     delta = np.zeros(shape=len(distance))
+    closest_leader = np.zeros(shape=len(distance), dtype=np.int32)
     for i, _ in enumerate(distance):
         density_larger_than_point = np.squeeze(np.argwhere(rho > rho[i]))
         if density_larger_than_point.size != 0:
@@ -124,19 +127,39 @@ def cal_delta(distance, rho):
             min_distance_index = np.squeeze(np.argwhere(distance_between_larger_point == delta[i]))
             if min_distance_index.size >= 2:
                 min_distance_index = np.random.choice(a=min_distance_index)
+            if distance_between_larger_point.size > 1:
+                closest_leader[i] = density_larger_than_point[min_distance_index]
+            else:
+                closest_leader[i] = density_larger_than_point
         else:
             delta[i] = np.max(distance)
-    return delta
+            closest_leader[i] = i
+    return delta, closest_leader
 
-def cal_cluster_centers(X, sample_weight, rho, delta, min_centers, max_centers):
-    sigma = np.multiply(rho, delta)
-    X_weight = np.multiply(X.T, sample_weight).T
+def _clustering(closest_leader, chose_list):
+    for i in range(len(closest_leader)):
+            while closest_leader[i] not in chose_list:
+                j = closest_leader[i]
+                closest_leader[i] = closest_leader[j]
+    labels = np.zeros(shape=len(closest_leader), dtype=np.int32)
+    for i, A in enumerate(chose_list):
+        for j, B in enumerate(closest_leader):
+            if A == B:
+                labels[j] = i
+    return labels
+
+def cal_cluster_centers(X, sample_weight, closest_leader, sigma, min_centers, max_centers):
+    X = np.multiply(X.T, sample_weight).T
     score = 0.0
     best_centers = None
+    best_labels = None
     for i in range(min_centers, max_centers+1):
-        centers = X_weight.take(heapq.nlargest(i, range(len(sigma)), sigma.take), axis=0)
-        labels = cal_labels(X, sample_weight, centers, return_inertia=False)
-        if metrics.silhouette_score(X_weight, labels) > score:
-            score = metrics.silhouette_score(X_weight, labels)
+        chose_list = heapq.nlargest(i, range(len(sigma)), sigma.take)
+        centers = X.take(chose_list, axis=0)
+        closest_leader_copy = closest_leader.copy()
+        labels = _clustering(closest_leader_copy, chose_list)
+        if metrics.calinski_harabaz_score(X, labels) > score:
+            score = metrics.calinski_harabaz_score(X, labels)
             best_centers = centers
-    return best_centers
+            best_labels = labels
+    return best_centers, best_labels
