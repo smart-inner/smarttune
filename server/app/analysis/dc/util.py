@@ -2,7 +2,7 @@ import numpy as np
 import heapq
 from sklearn import metrics
 
-def cal_labels(X, sample_weight, centers, return_inertia=True):
+def cal_labels(X, centers, return_inertia=True):
     """
     Compute the labels and the inertia of the given samples and centers.
     Parameters
@@ -10,8 +10,6 @@ def cal_labels(X, sample_weight, centers, return_inertia=True):
     X : {ndarray, sparse matrix} of shape (n_samples, n_features)
         The input samples to assign to the labels. If sparse matrix, must
         be in CSR format.
-    sample_weight : ndarray of shape (n_samples,)
-        The weights for each observation in X.
     centers : ndarray of shape (n_clusters, n_features)
         The cluster centers.
     return_inertia : bool, default=True
@@ -24,11 +22,10 @@ def cal_labels(X, sample_weight, centers, return_inertia=True):
         Sum of squared distances of samples to their closest cluster center.
         Inertia is only returned if return_inertia is True.
     """
-    points = np.multiply(X.T, sample_weight).T
     distance = np.array([])
-    for point in points:
+    for point in X:
         distance = np.append(distance, np.linalg.norm(centers - point, axis=1), axis=0)
-    distance = distance.reshape(len(points), len(centers))
+    distance = distance.reshape(len(X), len(centers))
     labels = np.argmin(distance, axis=1)
     if return_inertia:
         return labels, distance
@@ -197,8 +194,8 @@ def cal_cluster_centers(X, sample_weight, closest_leader, sigma, min_centers, ma
     for i in range(min_centers, max_centers+1):
         chose_list = heapq.nlargest(i, range(len(sigma)), sigma.take)
         centers = X.take(chose_list, axis=0)
-        closest_leader_copy = closest_leader.copy()
-        labels = _clustering(closest_leader_copy, chose_list)
+        #labels = _clustering(closest_leader_copy, chose_list)
+        labels = cal_labels(X, centers, return_inertia=False)
         if metrics.calinski_harabaz_score(X, labels) > score:
             score = metrics.calinski_harabaz_score(X, labels)
             best_centers = centers
