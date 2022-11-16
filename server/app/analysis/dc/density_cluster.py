@@ -104,7 +104,7 @@ class DensityCluster:
 
         X = self._check_test_data(X)
         sample_weight = check_sample_weight(sample_weight, X, dtype=X.dtype)
-        labels = cal_labels(X, sample_weight, self.cluster_centers_, return_inertia=False)
+        labels = cal_labels(np.multiply(X.T, sample_weight).T, self.cluster_centers_, return_inertia=False)
 
         return labels
 
