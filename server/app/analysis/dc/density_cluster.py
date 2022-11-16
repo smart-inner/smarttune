@@ -29,8 +29,13 @@ class DensityCluster:
 
         Parameters
         ----------
-        percent: sort all distances in ascending order, and use 
+        percent: float
+            Sort all distances in ascending order, and use 
             'percent' position as dc.
+        min_cluster_centers: int
+            The minimum number of cluster centers
+        max_cluster_centers: int
+            The maximum number of cluster centers
         """
         self.percent_ = percent
         self.min_cluster_centers_ = min_cluster_centers
@@ -67,8 +72,9 @@ class DensityCluster:
         normal_rho = (rho - np.min(rho)) / (np.max(rho) - np.min(rho))
         normal_delta = (delta - np.min(delta)) / (np.max(delta) - np.min(delta))
         sigma = np.multiply(normal_rho, normal_delta)
-        self.cluster_centers_, self.labels_ = cal_cluster_centers(X, sample_weight, closest_leader, sigma, 
+        self.cluster_centers_, cluster_labels = cal_cluster_centers(X, sample_weight, closest_leader, sigma, 
             self.min_cluster_centers_, self.max_cluster_centers_)
+        self.labels_ = cal_outlier(cluster_labels, rho, delta, self.percent_)
 
         return self
 

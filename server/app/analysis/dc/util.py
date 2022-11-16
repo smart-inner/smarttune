@@ -137,6 +137,19 @@ def cal_delta(distance, rho):
     return delta, closest_leader
 
 def _clustering(closest_leader, chose_list):
+    """
+    Calculate the labels for every point
+    Parameters:
+    -----------
+    closest_leader: ndarray of shape (n_samples, )
+        The closest point for every point
+    chose_list: list
+        The indexs of cluster centers
+    Returns
+    --------
+    labels: ndarray of shape (n_samples, )
+        The lables for every point
+    """
     for i in range(len(closest_leader)):
             while closest_leader[i] not in chose_list:
                 j = closest_leader[i]
@@ -149,6 +162,34 @@ def _clustering(closest_leader, chose_list):
     return labels
 
 def cal_cluster_centers(X, sample_weight, closest_leader, sigma, min_centers, max_centers):
+    """
+    Calculate the cluster centers
+    Parameters:
+    -----------
+    X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            Training instances to cluster. It must be noted that the data
+            will be converted to C ordering, which will cause a memory
+            copy if the given data is not C-contiguous.
+            If a sparse matrix is passed, a copy will be made if it's not in
+            CSR format.
+    sample_weight : array-like of shape (n_samples,), default=None
+            The weights for each observation in X. If None, all observations
+            are assigned equal weight.
+    closest_leader: ndarray of shape (n_samples, )
+        The closest point for every point
+    sigma: ndarray of shape (n_samples, )
+        The value of rho * delta
+    min_centers: int
+        The minimum number of cluster centers
+    max_centers: int
+        The maximum number of cluster centers
+    Returns
+    --------
+    centers: ndarray
+        The centers for clustering
+    labels: ndarray of shape (n_samples, )
+        The lables for every point
+    """
     X = np.multiply(X.T, sample_weight).T
     score = 0.0
     best_centers = None
@@ -163,3 +204,29 @@ def cal_cluster_centers(X, sample_weight, closest_leader, sigma, min_centers, ma
             best_centers = centers
             best_labels = labels
     return best_centers, best_labels
+
+def cal_outlier(labels, rho, delta, percent):
+    """
+    Calculate the outlier points
+    Parameters:
+    -----------
+    labels: ndarray of shape (n_samples, )
+        The lables for every point
+    rho: ndarray of shape (n_samples, )
+        The density for every point.
+    delta: ndarray of shape (n_samples, )
+        The delta for every point.
+    percent: float
+        Sort all delta and rho, use 'percent' position as threshold
+    Returns
+    --------
+    labels: ndarray of shape (n_samples, )
+        The lables with outlier points
+    """
+    position = 1 if int(len(delta) * percent / 100) == 0 else int(len(delta) * percent / 100)
+    chose_delta = heapq.nlargest(position+1, range(len(delta)), delta.take)
+    chose_rho = heapq.nsmallest(position+1, range(len(rho)), rho.take)
+    outliers = np.intersect1d(chose_delta, chose_rho)
+    for outlier in outliers:
+        labels[outlier] = -1
+    return labels
