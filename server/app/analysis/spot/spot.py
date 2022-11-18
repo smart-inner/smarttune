@@ -51,6 +51,7 @@ class biSPOT:
         
         self.extreme_quantile = dict.copy(nonedict)
         self.init_threshold = dict.copy(nonedict)
+        self.history_peaks = dict.copy(nonedict)
         self.peaks = dict.copy(nonedict)
         self.gamma = dict.copy(nonedict)
         self.sigma = dict.copy(nonedict)
@@ -100,8 +101,10 @@ class biSPOT:
         self.init_threshold['down'] = S[int(0.02*n_init)] # t is fixed for the whole algorithm
 
         # initial peaks
-        self.peaks['up'] = init_data[init_data>self.init_threshold['up']]-self.init_threshold['up']
-        self.peaks['down'] = -(init_data[init_data<self.init_threshold['down']]-self.init_threshold['down'])
+        self.history_peaks['up'] = init_data[init_data>self.init_threshold['up']]
+        self.history_peaks['down'] = init_data[init_data<self.init_threshold['down']]
+        self.peaks['up'] = self.history_peaks['up']-self.init_threshold['up']
+        self.peaks['down'] = -(self.history_peaks['down']-self.init_threshold['down'])
         self.Nt['up'] = self.peaks['up'].size
         self.Nt['down'] = self.peaks['down'].size
         self.n = n_init
@@ -116,6 +119,28 @@ class biSPOT:
             self.extreme_quantile[side] = self._quantile(side,g,s)
             self.gamma[side] = g
             self.sigma[side] = s
+
+
+    def _update_one_side(self, side, value):
+        if side == 'up':
+            min_index = np.argmin(self.history_peaks[side])
+            if value > self.history_peaks[side][min_index]:
+                self.init_threshold[side] = self.history_peaks[side][min_index]
+                init_data = self.history_peaks[side]
+                self.history_peaks[side] = init_data[init_data>self.init_threshold[side]]
+                self.peaks[side] = self.history_peaks[side] - self.init_threshold[side]
+        elif side == 'down':
+            max_index = np.argmax(self.history_peaks[side])
+            if value < self.history_peaks[side][max_index]:
+                self.init_threshold[side] = self.history_peaks[side][max_index]
+                init_data = self.history_peaks[side]
+                self.history_peaks[side] = init_data[init_data<self.init_threshold[side]]
+                self.peaks[side] = -(self.history_peaks[side]-self.init_threshold[side])
+        self.Nt[side] = self.peaks[side].size
+        g,s,_ = self._grimshaw('up')
+        self.extreme_quantile['up'] = self._quantile('up',g,s)
+        self.gamma[side] = g
+        self.sigma[side] = s
 
 
     def predict(self, data, with_alarm = True):
@@ -162,24 +187,26 @@ class biSPOT:
                     alarm.append(i)
                 # otherwise we add it in the peaks
                 else:
-                    self.peaks['up'] = np.append(self.peaks['up'],stream_data[i]-self.init_threshold['up'])
-                    self.Nt['up'] += 1
-                    self.n += 1
+                    self._update_one_side('up', stream_data[i])
+                    #self.peaks['up'] = np.append(self.peaks['up'],stream_data[i]-self.init_threshold['up'])
+                    #self.Nt['up'] += 1
+                    #self.n += 1
                     # and we update the thresholds
 
-                    g,s,l = self._grimshaw('up')
-                    self.extreme_quantile['up'] = self._quantile('up',g,s)
+                    #g,s,l = self._grimshaw('up')
+                    #self.extreme_quantile['up'] = self._quantile('up',g,s)
 
             # case where the value exceeds the initial threshold but not the alarm ones
             elif stream_data[i]>self.init_threshold['up']:
                     # we add it in the peaks
-                    self.peaks['up'] = np.append(self.peaks['up'], stream_data[i]-self.init_threshold['up'])
-                    self.Nt['up'] += 1
-                    self.n += 1
+                    self._update_one_side('up', stream_data[i])
+                    #self.peaks['up'] = np.append(self.peaks['up'], stream_data[i]-self.init_threshold['up'])
+                    #self.Nt['up'] += 1
+                    #self.n += 1
                     # and we update the thresholds
 
-                    g,s,l = self._grimshaw('up')
-                    self.extreme_quantile['up'] = self._quantile('up',g,s)
+                    #g,s,l = self._grimshaw('up')
+                    #self.extreme_quantile['up'] = self._quantile('up',g,s)
                     
             elif stream_data[i]<self.extreme_quantile['down'] :
                 # if we want to alarm, we put it in the alarm list
@@ -187,27 +214,27 @@ class biSPOT:
                     alarm.append(i)
                 # otherwise we add it in the peaks
                 else:
-                    self.peaks['down'] = np.append(self.peaks['down'],-(stream_data[i]-self.init_threshold['down']))
-                    self.Nt['down'] += 1
-                    self.n += 1
+                    self._update_one_side('down', stream_data[i])
+                    #self.peaks['down'] = np.append(self.peaks['down'],-(stream_data[i]-self.init_threshold['down']))
+                    #self.Nt['down'] += 1
+                    #self.n += 1
                     # and we update the thresholds
 
-                    g,s,l = self._grimshaw('down')
-                    self.extreme_quantile['down'] = self._quantile('down',g,s)
+                    #g,s,l = self._grimshaw('down')
+                    #self.extreme_quantile['down'] = self._quantile('down',g,s)
 
             # case where the value exceeds the initial threshold but not the alarm ones
             elif stream_data[i]<self.init_threshold['down']:
                     # we add it in the peaks
-                    self.peaks['down'] = np.append(self.peaks['down'],-(stream_data[i]-self.init_threshold['down']))
-                    self.Nt['down'] += 1
-                    self.n += 1
+                    self._update_one_side('down', stream_data[i])
+                    #self.peaks['down'] = np.append(self.peaks['down'],-(stream_data[i]-self.init_threshold['down']))
+                    #self.Nt['down'] += 1
+                    #self.n += 1
                     # and we update the thresholds
 
-                    g,s,l = self._grimshaw('down')
-                    self.extreme_quantile['down'] = self._quantile('down',g,s)
-            else:
-                self.n += 1
-
+                    #g,s,l = self._grimshaw('down')
+                    #self.extreme_quantile['down'] = self._quantile('down',g,s)
+            self.n += 1
                 
             thup.append(self.extreme_quantile['up']) # thresholds record
             thdown.append(self.extreme_quantile['down']) # thresholds record
