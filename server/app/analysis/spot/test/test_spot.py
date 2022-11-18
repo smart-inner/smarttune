@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from app.analysis.spot import bidSPOT, biSPOT, ESPOT, momSPOT, DRSPOT
+from app.analysis.spot import bidSPOT, biSPOT, ESPOT, momSPOT
 import pandas as pd
 f = './edf_stocks.csv'
 import pickle
@@ -21,9 +21,8 @@ q = 1e-5             # risk parameter
 d = 10                # depth
 #s = ESPOT(q,d)     # bidSPOT object
 #s = bidSPOT(q)  
-s = biSPOT(q)  
-#s =DRSPOT(q)
-#s = momSPOT(q)
+#s = biSPOT(q)  
+s = momSPOT(q)
 s.fit(init_data)     # data import
 #with open('spot.pickle', 'wb') as f:
 #    pickle.dump(s, f)

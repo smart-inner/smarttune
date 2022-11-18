@@ -120,6 +120,7 @@ class biSPOT:
             self.gamma[side] = g
             self.sigma[side] = s
 
+
     def _update_one_side(self, side, value):
         if side == 'up':
             min_index = np.argmin(self.history_peaks[side])
@@ -140,6 +141,7 @@ class biSPOT:
         self.extreme_quantile['up'] = self._quantile('up',g,s)
         self.gamma[side] = g
         self.sigma[side] = s
+
 
     def predict(self, data, with_alarm = True):
         """
