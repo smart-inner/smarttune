@@ -175,7 +175,7 @@ class ESPOT:
                 # otherwise we add it in the peaks
                 else:
                     self.peaks['up'] = np.append(self.peaks['up'],Ni-self.init_threshold['up'])
-                    self.Nt['up'] += 1
+                    #self.Nt['up'] += 1
                     self.n += 1
                     # and we update the thresholds
 
@@ -187,7 +187,7 @@ class ESPOT:
             elif Ni>self.init_threshold['up']:
                     # we add it in the peaks
                     self.peaks['up'] = np.append(self.peaks['up'],Ni-self.init_threshold['up'])
-                    self.Nt['up'] += 1
+                    #self.Nt['up'] += 1
                     self.n += 1
                     # and we update the thresholds
                     g,s,l = self._grimshaw('up')
@@ -201,7 +201,7 @@ class ESPOT:
                 # otherwise we add it in the peaks
                 else:
                     self.peaks['down'] = np.append(self.peaks['down'],-(Ni-self.init_threshold['down']))
-                    self.Nt['down'] += 1
+                    #self.Nt['down'] += 1
                     self.n += 1
                     # and we update the thresholds
 
@@ -213,7 +213,7 @@ class ESPOT:
             elif Ni<self.init_threshold['down']:
                     # we add it in the peaks
                     self.peaks['down'] = np.append(self.peaks['down'],-(Ni-self.init_threshold['down']))
-                    self.Nt['down'] += 1
+                    #self.Nt['down'] += 1
                     self.n += 1
                     # and we update the thresholds
 
