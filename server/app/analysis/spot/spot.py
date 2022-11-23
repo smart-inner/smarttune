@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from math import log
-import tqdm
+import tqdm, os, pickle
 from scipy.optimize import minimize
 # colors for plot
 deep_saffron = '#FF9933'
@@ -123,16 +123,20 @@ class biSPOT:
 
     def _update_one_side(self, side, value):
         if side == 'up':
-            min_index = np.argmin(self.history_peaks[side])
+            min_index = np.argmin(self.history_peaks[side], axis=0)
             if value > self.history_peaks[side][min_index]:
-                self.init_threshold[side] = self.history_peaks[side][min_index]
+                weight = 0.99 if self.history_peaks[side][min_index] > 0 else 1.01
+                self.init_threshold[side] = weight * self.history_peaks[side][min_index]
+                self.history_peaks[side][min_index] = value
                 init_data = self.history_peaks[side]
                 self.history_peaks[side] = init_data[init_data>self.init_threshold[side]]
                 self.peaks[side] = self.history_peaks[side] - self.init_threshold[side]
         elif side == 'down':
-            max_index = np.argmax(self.history_peaks[side])
+            max_index = np.argmax(self.history_peaks[side], axis=0)
             if value < self.history_peaks[side][max_index]:
-                self.init_threshold[side] = self.history_peaks[side][max_index]
+                weight = 1.01 if self.history_peaks[side][max_index] > 0 else 0.99
+                self.init_threshold[side] = weight * self.history_peaks[side][max_index]
+                self.history_peaks[side][max_index] = value
                 init_data = self.history_peaks[side]
                 self.history_peaks[side] = init_data[init_data<self.init_threshold[side]]
                 self.peaks[side] = -(self.history_peaks[side]-self.init_threshold[side])
@@ -482,3 +486,34 @@ class biSPOT:
         plt.show()
         
         return fig
+
+    def save(self, filename):
+        """
+        Save the model in a file
+        
+        Parameters
+        ----------
+        filename : str
+            name of the file
+        """
+        # if file exists, we delete it
+        if os.path.isfile(filename):
+            os.remove(filename)
+            with open(filename, 'wb') as output:
+                pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+        else:
+            with open(filename, 'wb') as output:
+                pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load(filename):
+        """
+        Load a model from a file
+        
+        Parameters
+        ----------
+        filename : str
+            name of the file
+        """
+        with open(filename, 'rb') as input:
+            return pickle.load(input)
